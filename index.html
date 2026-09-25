@@ -410,17 +410,25 @@ function cloudImport() {
     .then(data => {
       console.log("Cloud Data:", data);
       if(data && data.length > 0) {
-        bills = data;
+        // Sheet ke data ko app ke format ke hisab se map kar rahe hain
+        bills = data.map(function(row) {
+          return {
+            bNo: row.bNo || row.billNo || "1",
+            customer: row.customer || row.customerName || "Customer",
+            items: row.items || [{ name: row.itemName || "Item", size: row.size || "", style: row.style || "", shade: row.shade || "", qty: row.qty || 1, price: row.price || 0 }],
+            total: row.total || row.totalAmount || 0,
+            date: row.date || new Date().toLocaleString()
+          };
+        });
         save('bills', bills);
-        renderBills();
-        renderDash();
+        if(typeof renderBills === 'function') renderBills();
+        if(typeof renderDash === 'function') renderDash();
         alert("Google Sheet se saara data successfully Import ho gaya!");
       } else {
         alert("Sheet par koi data nahi mila!");
       }
     })
     .catch(err => alert("Import error: " + err));
-}
 }
 
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
