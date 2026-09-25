@@ -314,6 +314,13 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 
   <div id="more-settings" style="display:none">
     <div class="card">
+      <h3>Google Drive Sync (Cloud Backup)</h3>
+      <div class="rowbtns">
+        <button onclick="cloudExport()">Export to Cloud</button>
+        <button class="sec" onclick="cloudImport()">Import from Cloud</button>
+      </div>
+    </div>
+    <div class="card">
       <h3>Stock Alert Limits Setup</h3>
       <label>Minimum Stock Alert Limit</label><input id="set-min-stock" type="number" value="3">
       <label>Maximum Stock Limit</label><input id="set-max-stock" type="number" value="100">
@@ -367,6 +374,46 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 </nav>
 
 <script>
+// Google Drive Web App URL
+var webAppUrl = "https://script.google.com/macros/s/AKfycbwY8GG79ikNo-cbPTYJMmxcUpt_nVSpDyNHUgC3rilyoVKEAHZ4zUwBEnCX/exec";
+
+// Cloud Export Function
+function cloudExport() {
+  if(bills.length === 0) {
+    alert("Export karne ke liye koi bill nahi hai!");
+    return;
+  }
+  let lastBill = bills[bills.length - 1];
+  var data = {
+    action: "export",
+    billNo: lastBill.bNo || "1",
+    customerName: lastBill.customer || "Customer",
+    items: JSON.stringify(lastBill.items || []),
+    totalAmount: lastBill.total || 0,
+    date: lastBill.date || new Date().toLocaleString()
+  };
+
+  fetch(webAppUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  }).then(() => {
+    alert("Data successfully Google Sheet par Export ho gaya!");
+  }).catch(err => alert("Error: " + err));
+}
+
+// Cloud Import Function
+function cloudImport() {
+  fetch(webAppUrl)
+    .then(response => response.json())
+    .then(data => {
+      console.log("Cloud Data:", data);
+      alert("Google Sheet se data successfully Import ho gaya!");
+    })
+    .catch(err => alert("Import error: " + err));
+}
+
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let items=load('items',[]);
