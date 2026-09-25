@@ -408,27 +408,43 @@ function cloudImport() {
   fetch(webAppUrl)
     .then(response => response.json())
     .then(data => {
-      console.log("Cloud Data:", data);
+      console.log("Raw Cloud Data Received:", data);
       if(data && data.length > 0) {
-        // Sheet ke data ko app ke format ke hisab se map kar rahe hain
         bills = data.map(function(row) {
           return {
             bNo: row.bNo || row.billNo || "1",
             customer: row.customer || row.customerName || "Customer",
-            items: row.items || [{ name: row.itemName || "Item", size: row.size || "", style: row.style || "", shade: row.shade || "", qty: row.qty || 1, price: row.price || 0 }],
+            items: row.items && Array.isArray(row.items) ? row.items : [{
+              name: row.itemName || "Item",
+              size: row.size || "",
+              style: row.style || "",
+              shade: row.shade || "",
+              qty: row.qty || 1,
+              price: row.price || 0
+            }],
             total: row.total || row.totalAmount || 0,
             date: row.date || new Date().toLocaleString()
           };
         });
+        
         save('bills', bills);
+        
+        // UI ko refresh karne ke liye
         if(typeof renderBills === 'function') renderBills();
         if(typeof renderDash === 'function') renderDash();
-        alert("Google Sheet se saara data successfully Import ho gaya!");
+        
+        alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
+        
+        // App ko automatically All Bills page par bhej rahe hain taaki data dikhe
+        if(typeof showTab === 'function') showTab('allBills');
       } else {
         alert("Sheet par koi data nahi mila!");
       }
     })
-    .catch(err => alert("Import error: " + err));
+    .catch(err => {
+      console.error("Import Error:", err);
+      alert("Import error: " + err);
+    });
 }
 
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
