@@ -375,7 +375,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 
 <script>
 // Google Drive Web App URL
-var webAppUrl = "https://script.google.com/macros/s/AKfycbwmtTJVrUmiB0rwBKJVXpL0OSpr8HL4NEaG4J_Wtx8_uWsSEdmsIzMbtBXridGCMXNf/exec";
+var webAppUrl = "https://script.google.com/macros/s/AKfycby2MAW9jxOPfn0jPNpBLgBqHJCfXqOdHwq-04cGNoMmaCBQ5zKFDL9LrpTevhnkOl5u/exec";
 
 // Cloud Export Function (Updated with text/plain for no-cors fix)
 function cloudExport() {
@@ -409,9 +409,18 @@ function cloudImport() {
     .then(response => response.json())
     .then(data => {
       console.log("Cloud Data:", data);
-      alert("Google Sheet se data successfully Import ho gaya!");
+      if(data && data.length > 0) {
+        bills = data;
+        save('bills', bills);
+        renderBills();
+        renderDash();
+        alert("Google Sheet se saara data successfully Import ho gaya!");
+      } else {
+        alert("Sheet par koi data nahi mila!");
+      }
     })
     .catch(err => alert("Import error: " + err));
+}
 }
 
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
