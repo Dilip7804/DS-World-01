@@ -405,48 +405,56 @@ function cloudExport() {
 }
 // Cloud Import Function
 function cloudImport() {
-  fetch(webAppUrl)
-    .then(response => response.json())
-    .then(data => {
-      console.log("Raw Cloud Data Received:", data);
-      if(data && data.length > 0) {
-        bills = data.map(function(row) {
-          return {
-            bNo: row.bNo || row.billNo || "1",
-            customer: row.customer || row.customerName || "Customer",
-            items: row.items && Array.isArray(row.items) ? row.items : [{
-              name: row.itemName || "Item",
-              size: row.size || "",
-              style: row.style || "",
-              shade: row.shade || "",
-              qty: row.qty || 1,
-              price: row.price || 0
-            }],
-            total: row.total || row.totalAmount || 0,
-            date: row.date || new Date().toLocaleString()
-          };
-        });
-        
-        save('bills', bills);
-        
-        // UI ko refresh karne ke liye
-        if(typeof renderBills === 'function') renderBills();
-        if(typeof renderDash === 'function') renderDash();
-        
-        alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
-        
-        // App ko automatically All Bills page par bhej rahe hain taaki data dikhe
-        if(typeof showTab === 'function') showTab('allBills');
-      } else {
-        alert("Sheet par koi data nahi mila!");
-      }
-    })
-    .catch(err => {
-      console.error("Import Error:", err);
-      alert("Import error: " + err);
-    });
-}
+  var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+  
+  window[callbackName] = function(data) {
+    delete window[callbackName];
+    if (script.parentNode) {
+      document.body.removeChild(script);
+    }
+    
+    console.log("JSONP Data Received:", data);
+    if(data && data.length > 0) {
+      bills = data.map(function(row) {
+        return {
+          bNo: row.bNo || row.billNo || "1",
+          customer: row.customer || row.customerName || "Customer",
+          items: row.items && Array.isArray(row.items) ? row.items : [{
+            name: row.name || row.itemName || "Item",
+            size: row.size || "",
+            style: row.style || "",
+            shade: row.shade || "",
+            qty: row.qty || 1,
+            price: row.price || 0
+          }],
+          total: row.total || row.totalAmount || 0,
+          date: row.date || new Date().toLocaleString()
+        };
+      });
+      
+      save('bills', bills);
+      if(typeof renderBills === 'function') renderBills();
+      if(typeof renderDash === 'function') renderDash();
+      
+      alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
+      if(typeof showTab === 'function') showTab('allBills');
+    } else {
+      alert("Sheet par koi data nahi mila!");
+    }
+  };
 
+  var script = document.createElement('script');
+  script.src = webAppUrl + (webAppUrl.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callbackName;
+  script.onerror = function(err) {
+    delete window[callbackName];
+    if (script.parentNode) {
+      document.body.removeChild(script);
+    }
+    alert("Import error: Script load nahi ho payi!");
+  };
+  
+  document.body.appendChild(script);
+}
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let items=load('items',[]);
