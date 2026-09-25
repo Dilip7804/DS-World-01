@@ -377,7 +377,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 // Google Drive Web App URL
 var webAppUrl = "https://script.google.com/macros/s/AKfycbwuc4sKEjnALn5ISSYltviHQtN5savjJU5il7zcO3TN6lmoi2Vc7M8Wij9vd2HYX7-A/exec";
 
-// Cloud Export Function (Updated with text/plain for no-cors fix)
+// Cloud Export Function
 function cloudExport() {
   if(bills.length === 0) {
     alert("Export karne ke liye koi bill nahi hai!");
@@ -403,6 +403,7 @@ function cloudExport() {
     alert("Data successfully Google Sheet par Export ho gaya!");
   }).catch(err => alert("Error: " + err));
 }
+
 // Cloud Import Function
 function cloudImport() {
   fetch(webAppUrl)
@@ -432,7 +433,7 @@ function cloudImport() {
         if(typeof renderDash === 'function') renderDash();
         
         alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
-        if(typeof showTab === 'function') showTab('allBills');
+        if(typeof showTab === 'function') showTab('bills');
       } else {
         alert("Sheet par koi data nahi mila!");
       }
@@ -442,18 +443,7 @@ function cloudImport() {
       alert("Import error: " + err.message);
     });
 }
-  var script = document.createElement('script');
-  script.src = webAppUrl + (webAppUrl.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callbackName;
-  script.onerror = function(err) {
-    delete window[callbackName];
-    if (script.parentNode) {
-      document.body.removeChild(script);
-    }
-    alert("Import error: Script load nahi ho payi!");
-  };
-  
-  document.body.appendChild(script);
-}
+
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let items=load('items',[]);
