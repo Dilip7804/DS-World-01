@@ -405,44 +405,43 @@ function cloudExport() {
 }
 // Cloud Import Function
 function cloudImport() {
-  var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-  
-  window[callbackName] = function(data) {
-    delete window[callbackName];
-    if (script.parentNode) {
-      document.body.removeChild(script);
-    }
-    
-    console.log("JSONP Data Received:", data);
-    if(data && data.length > 0) {
-      bills = data.map(function(row) {
-        return {
-          bNo: row.bNo || row.billNo || "1",
-          customer: row.customer || row.customerName || "Customer",
-          items: row.items && Array.isArray(row.items) ? row.items : [{
-            name: row.name || row.itemName || "Item",
-            size: row.size || "",
-            style: row.style || "",
-            shade: row.shade || "",
-            qty: row.qty || 1,
-            price: row.price || 0
-          }],
-          total: row.total || row.totalAmount || 0,
-          date: row.date || new Date().toLocaleString()
-        };
-      });
-      
-      save('bills', bills);
-      if(typeof renderBills === 'function') renderBills();
-      if(typeof renderDash === 'function') renderDash();
-      
-      alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
-      if(typeof showTab === 'function') showTab('allBills');
-    } else {
-      alert("Sheet par koi data nahi mila!");
-    }
-  };
-
+  fetch(webAppUrl)
+    .then(response => response.json())
+    .then(data => {
+      console.log("Cloud Data:", data);
+      if(data && data.length > 0) {
+        bills = data.map(function(row) {
+          return {
+            bNo: row.bNo || row.billNo || "1",
+            customer: row.customer || row.customerName || "Customer",
+            items: row.items && Array.isArray(row.items) ? row.items : [{
+              name: row.name || row.itemName || "Item",
+              size: row.size || "",
+              style: row.style || "",
+              shade: row.shade || "",
+              qty: row.qty || 1,
+              price: row.price || 0
+            }],
+            total: row.total || row.totalAmount || 0,
+            date: row.date || new Date().toLocaleString()
+          };
+        });
+        
+        save('bills', bills);
+        if(typeof renderBills === 'function') renderBills();
+        if(typeof renderDash === 'function') renderDash();
+        
+        alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
+        if(typeof showTab === 'function') showTab('allBills');
+      } else {
+        alert("Sheet par koi data nahi mila!");
+      }
+    })
+    .catch(err => {
+      console.error("Import Error:", err);
+      alert("Import error: " + err.message);
+    });
+}
   var script = document.createElement('script');
   script.src = webAppUrl + (webAppUrl.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callbackName;
   script.onerror = function(err) {
