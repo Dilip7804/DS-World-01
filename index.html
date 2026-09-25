@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="hi" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DS WORLD Billing System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;--card:#ffffff;--text:#1e293b;--sub:#64748b;--border:#e2e8f0;
+  --accent:#2563eb;--accent2:#1d4ed8;--accent-bg:#eff6ff;--danger:#dc2626;--danger-bg:#fee2e2;
+  --success:#16a34a;--success-bg:#dcfce7;--font:'Poppins',sans-serif;
+}
+[data-theme="blue"]{
+  --bg:#f0f9ff;--card:#ffffff;--text:#0f172a;--sub:#475569;--border:#bae6fd;
+  --accent:#0284c7;--accent2:#0369a1;--accent-bg:#e0f2fe;
+}
+[data-theme="warm"]{
+  --bg:#fdf8f6;--card:#ffffff;--text:#292524;--sub:#78716c;--border:#e7e5e4;
+  --accent:#ea580c;--accent2:#c2410c;--accent-bg:#ffedd5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);padding-bottom:90px;min-height:100vh;transition:background .2s}
+header{position:sticky;top:0;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+header h1{font-size:16px;font-weight:700;margin:0}
+header p{font-size:12px;color:var(--sub);margin:0;font-weight:500}
+.hspacer{flex:1}
+.iconbtn{width:auto;padding:8px 10px;background:var(--bg);border-radius:10px;border:1px solid var(--border);color:var(--sub);display:flex;cursor:pointer;position:relative}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.alert-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:10px;padding:2px 5px;border-radius:10px;font-weight:700}
+.wrap{padding:16px;max-width:600px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.02)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+.vip-card{border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.vip-card.c1{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.vip-card.c2{background:linear-gradient(135deg,#16a34a,#15803d)}
+.vip-card.c3{background:linear-gradient(135deg,#d97706,#b45309)}
+.vip-card .lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;opacity:.9}
+.vip-card .val{font-size:22px;font-weight:700;margin-top:6px}
+
+input,select{width:100%;padding:12px 14px;margin:6px 0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:14px;font-family:var(--font);transition:all .2s}
+input:focus,select:focus{outline:none;border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px var(--accent-bg)}
+label{font-size:13px;color:var(--sub);font-weight:600}
+button{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+button:active{transform:scale(0.98)}
+button.sec{background:var(--accent-bg);color:var(--accent);box-shadow:none;border:1.5px solid var(--border)}
+button.ghost{background:transparent;color:var(--danger);border:1.5px solid var(--danger);padding:10px;box-shadow:none}
+button.small{width:auto;padding:6px 12px;font-size:12px;margin:0}
+.rowbtns{display:flex;gap:10px;margin-top:8px}
+.rowbtns button{flex:1}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.badge{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:600}
+.badge.paid{background:var(--success-bg);color:var(--success)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--border);padding:8px 10px;z-index:10;box-shadow:0 -2px 10px rgba(0,0,0,0.05)}
+nav button{flex:1;background:none;color:var(--sub);font-size:11px;font-weight:600;padding:6px 2px;margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:8px;box-shadow:none}
+nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+nav button.on{color:var(--accent);background:var(--accent-bg)}
+.tab{display:none}
+.tab.on{display:block}
+.itemline{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px dashed var(--border)}
+h3{margin:0 0 14px;font-size:16px;font-weight:700}
+.muted{color:var(--sub);font-size:13px;text-align:center;padding:20px 0}
+.pill{display:inline-block;font-size:12px;background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:20px;font-weight:600;margin-bottom:12px}
+.subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.subtabs button{flex:1 1 48%;background:var(--card);border:1.5px solid var(--border);color:var(--sub);box-shadow:none;font-size:13px;padding:10px;font-weight:600}
+.subtabs button.on{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+.stockbadge{font-size:11px;padding:4px 10px;border-radius:8px;font-weight:600;background:var(--success-bg);color:var(--success)}
+.stockbadge.low{background:var(--danger-bg);color:var(--danger)}
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.loginbox{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:30px 24px;box-shadow:0 10px 25px rgba(0,0,0,0.08);text-align:center;border:1px solid var(--border)}
+.loginbox .logo{width:60px;height:60px;font-size:26px;margin:0 auto 16px;border-radius:16px}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:55;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-ov.show{display:flex}
+.modal-box{background:var(--card);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border);box-shadow:0 15px 30px rgba(0,0,0,0.15)}
+.modal-box p{font-size:14px;margin:0 0 16px}
+#receipt-content{text-align:left;font-family:monospace;font-size:12px;max-height:50vh;overflow:auto;background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--border)}
+#cam-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:60;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px}
+#cam-video{width:100%;max-width:360px;border-radius:14px}
+.swatch{flex:1;padding:12px 6px;font-size:12px;font-weight:600;border-radius:10px;border:1.5px solid var(--border);box-shadow:none;cursor:pointer}
+@media print{
+  body>*:not(#print-modal){display:none !important}
+  #print-modal{position:absolute !important;inset:auto !important;background:none !important;display:block !important;padding:0}
+  #print-modal .modal-box{box-shadow:none;max-width:100%;text-align:left;border:none}
+  #print-modal .rowbtns,#dl-receipt-btn,#wa-receipt-btn{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="loginbox">
+    <div class="logo" id="lg-logo">DS</div>
+    <h1 style="font-size:20px;margin:0 0 6px">DS WORLD</h1>
+    <p class="muted" style="padding:0 0 16px;font-size:13px">Apna login details daalein</p>
+    <label>Username</label><input id="lg-user" placeholder="admin / staff">
+    <label>Password</label><input id="lg-pass" type="password" placeholder="••••••••">
+    <div id="lg-error" style="color:var(--danger);font-size:13px;display:none;margin-bottom:10px">Galat username ya password</div>
+    <button onclick="doLogin()">Login</button>
+  </div>
+</div>
+
+<div class="modal-ov" id="app-modal">
+  <div class="modal-box">
+    <p id="modal-msg"></p>
+    <input id="modal-input" style="display:none">
+    <div class="rowbtns" id="modal-btns"></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="print-modal">
+  <div class="modal-box" style="max-width:360px">
+    <div id="receipt-content"></div>
+    <div class="rowbtns" style="margin-top:16px">
+      <button class="ghost" onclick="document.getElementById('print-modal').classList.remove('show');showTab('bills', document.querySelectorAll('nav button')[3]);">Close & View</button>
+      <button onclick="doPrintNow()">Print Bill</button>
+    </div>
+    <button class="sec" style="margin-top:8px;background:#16a34a;color:#fff;border:none" onclick="shareOnWhatsApp()" id="wa-receipt-btn">Share on WhatsApp</button>
+  </div>
+</div>
+
+<div id="cam-modal">
+  <div style="position:relative;width:100%;max-width:360px">
+    <video id="cam-video" playsinline muted></video>
+    <div style="position:absolute;top:38%;left:8%;right:8%;height:24%;border:2.5px solid #4ade80;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,0.5)"></div>
+  </div>
+  <p id="cam-status" style="color:#fff;font-size:14px;margin-top:16px;text-align:center">Barcode ko frame ke beech mein rakhein</p>
+  <button class="ghost" style="width:auto;margin-top:12px;color:#fff;border-color:#fff" onclick="closeScanner()">Cancel</button>
+</div>
+
+<header>
+  <div class="logo" id="hd-logo">DS</div>
+  <div><h1 id="hd-name">DS WORLD</h1><p id="hd-role-lbl">Billing System</p></div>
+  <div class="hspacer"></div>
+  <button class="iconbtn" onclick="openStockAlertModal()" title="Stock Alerts"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="alert-badge" id="alert-count">0</span></button>
+  <button class="iconbtn" onclick="doLogout()" title="Logout"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>
+</header>
+<div class="wrap">
+
+<div id="tab-dash" class="tab on">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="vip-card c1">
+      <div class="lbl">Total Sales (Today)</div>
+      <div class="val" id="d-today-sales">Rs 0</div>
+    </div>
+    <div class="grid2">
+      <div class="vip-card c2">
+        <div class="lbl">Total Bills</div>
+        <div class="val" id="d-cnt">0</div>
+      </div>
+      <div class="vip-card c3">
+        <div class="lbl">Total Sales (All Time)</div>
+        <div class="val" id="d-sales">Rs 0</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Recent Bills</h3>
+    <div id="d-recent"></div>
+  </div>
+</div>
+
+<div id="tab-items" class="tab">
+  <div class="card">
+    <h3 id="i-formtitle">Naya Item Add Karein</h3>
+    <label>Name*</label><input id="i-name" placeholder="Item name">
+    <div class="grid3">
+      <div><label>Size</label><input id="i-size" placeholder="Size"></div>
+      <div><label>Style</label><input id="i-style" placeholder="Style"></div>
+      <div><label>Shade</label><input id="i-shade" placeholder="Shade"></div>
+    </div>
+    <div class="grid2">
+      <div><label>MRP*</label><input id="i-mrp" type="number" placeholder="MRP"></div>
+      <div><label>Selling Rate*</label><input id="i-rate" type="number" placeholder="Rate"></div>
+    </div>
+    <div class="grid2">
+      <div><label>GST %</label><input id="i-gst" type="number" value="0"></div>
+      <div><label>Opening Stock</label><input id="i-stock" type="number" value="0"></div>
+    </div>
+    <label>Barcode</label>
+    <div style="display:flex;gap:8px">
+      <input id="i-barcode" style="flex:1" placeholder="Barcode">
+      <button class="sec" style="width:auto;padding:12px;margin-top:6px" onclick="openScanner(function(v){document.getElementById('i-barcode').value=v})">Scan</button>
+    </div>
+    <button onclick="addItem()" id="i-savebtn">Save Item</button>
+    <button class="ghost" style="margin-top:8px;display:none" id="i-cancelbtn" onclick="cancelItemEdit()">Cancel Edit</button>
+  </div>
+
+  <div class="card">
+    <h3>Bulk Import Excel / CSV</h3>
+    <button class="sec" onclick="document.getElementById('item-excel-file').click()">Select File</button>
+    <input type="file" id="item-excel-file" style="display:none" accept=".xlsx,.xls,.csv,.txt" onchange="importExcelFile(event)">
+  </div>
+
+  <div class="card"><h3>Inventory Items</h3><div id="i-list"></div></div>
+</div>
+
+<div id="tab-bill" class="tab">
+  <div class="pill" id="b-mode">Naya Bill</div>
+  <div class="card">
+    <h3>Customer Details</h3>
+    <label>Customer Name</label><input id="b-cname" placeholder="Customer name">
+    <label>Customer Phone</label><input id="b-cphone" placeholder="Mobile number">
+    
+    <label style="margin-top:10px;display:block">Item Search Karein</label>
+    <input id="b-search" list="items-dl" placeholder="Type item name" oninput="onSearchPick()">
+    <datalist id="items-dl"></datalist>
+    <div class="grid2">
+      <div><label>Qty</label><input id="b-qty" type="number" value="1"></div>
+      <div><label>Selling Price (Rate)</label><input id="b-price" type="number"></div>
+    </div>
+    <div class="rowbtns">
+      <button class="sec" onclick="scanForBill()">Barcode Scan</button>
+      <button onclick="addToCart()">+ Add to Bill</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Bill Items</h3>
+    <div id="b-cart"><div class="muted">Koi item nahi joda gaya</div></div>
+    <div class="row"><span>Subtotal + GST</span><span id="b-sub">Rs 0</span></div>
+    <label>Discount (Rs)</label><input id="b-disc" type="number" value="0" oninput="recalcTotal()">
+    <div class="row" style="font-weight:700;font-size:18px"><span>Total Amount</span><span id="b-total">Rs 0</span></div>
+  </div>
+  <div class="card">
+    <h3>Payment Mode</h3>
+    <label>Payment Mode</label>
+    <select id="pay-mode" onchange="onPayModeChange()">
+      <option value="Cash">Cash (Full)</option>
+      <option value="Card">Card (Full)</option>
+      <option value="UPI">UPI (Full)</option>
+      <option value="Mix">Mix (Cash + UPI + Card)</option>
+    </select>
+    
+    <div id="pay-single">
+      <label>Paid Amount</label><input id="ps-amt" type="number" oninput="recalcTotal()">
+    </div>
+    
+    <div id="pay-mix" style="display:none">
+      <label>Cash</label><input id="pm-cash" type="number" value="0" oninput="cascadeCash()">
+      <label>UPI</label><input id="pm-upi" type="number" value="0" oninput="cascadeUpi()">
+      <label>Card</label><input id="pm-card" type="number" value="0" oninput="recalcTotal()">
+    </div>
+  </div>
+  <button id="b-savebtn">Generate Bill & Print</button>
+  <button class="ghost" style="margin-top:8px;display:none" id="b-cancelbtn" onclick="cancelEdit()">Cancel Edit</button>
+</div>
+
+<div id="tab-bills" class="tab">
+  <input id="s-search" placeholder="Search bill no / customer" oninput="renderBills()">
+  <div class="card"><div id="bills-list"></div></div>
+</div>
+
+<div id="tab-more" class="tab">
+  <div class="subtabs">
+    <button class="on" onclick="showMore('sales',this)">Sales Report</button>
+    <button onclick="showMore('register',this)">Sales Register</button>
+    <button onclick="showMore('stock',this)">Stock Report</button>
+    <button onclick="showMore('settings',this)">Settings</button>
+  </div>
+
+  <div id="more-sales">
+    <div class="card">
+      <h3>Sales Report (Mode-wise Filter)</h3>
+      <div class="grid2">
+        <div><label>From Date</label><input id="r-from" type="date"></div>
+        <div><label>To Date</label><input id="r-to" type="date"></div>
+      </div>
+      <label>Payment Mode Filter</label>
+      <select id="r-paymode">
+        <option value="All">All Modes</option>
+        <option value="Cash">Cash (Pure + Mix Cash)</option>
+        <option value="Card">Card (Pure + Mix Card)</option>
+        <option value="UPI">UPI (Pure + Mix UPI)</option>
+      </select>
+      <button class="sec" onclick="renderReport()">Apply Filter</button>
+    </div>
+    <div class="grid3" style="margin-bottom:12px">
+      <div class="vip-card c1" style="padding:12px"><div class="lbl">Matched Bills</div><div class="val" id="r-cnt" style="font-size:16px">0</div></div>
+      <div class="vip-card c2" style="padding:12px"><div class="lbl">Total Amount</div><div class="val" id="r-sales" style="font-size:15px">Rs 0</div></div>
+      <div class="vip-card c3" style="padding:12px"><div class="lbl">Breakdown</div><div class="val" id="r-breakdown" style="font-size:11px;margin-top:8px;line-height:1.3">C:0 | U:0 | Cd:0</div></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Report Details</h3>
+        <button class="small sec" onclick="exportExcel('sales')">Export CSV</button>
+      </div>
+      <div id="r-list"></div>
+    </div>
+  </div>
+
+  <div id="more-register" style="display:none">
+    <div class="card">
+      <h3>Sales Register</h3>
+      <input id="reg-search" placeholder="Search customer or bill no" oninput="renderRegister()">
+      <button class="small sec" style="margin-bottom:12px" onclick="exportExcel('register')">Export CSV</button>
+      <div id="reg-list"></div>
+    </div>
+  </div>
+
+  <div id="more-stock" style="display:none">
+    <div class="card">
+      <h3>Stock Status</h3>
+      <input id="st-search" placeholder="Filter items" oninput="renderStock()">
+      <button class="small sec" style="margin-bottom:12px" onclick="exportExcel('stock')">Export CSV</button>
+      <div id="st-list"></div>
+    </div>
+  </div>
+
+  <div id="more-settings" style="display:none">
+    <div class="card">
+      <h3>Stock Alert Limits Setup</h3>
+      <label>Minimum Stock Alert Limit</label><input id="set-min-stock" type="number" value="3">
+      <label>Maximum Stock Limit</label><input id="set-max-stock" type="number" value="100">
+      <button class="sec" onclick="saveStockLimits()">Save Stock Limits</button>
+    </div>
+    <div class="card">
+      <h3>Theme Color</h3>
+      <div class="rowbtns">
+        <button class="swatch" style="background:#ffffff;color:#2563eb;border:1.5px solid #2563eb" onclick="setTheme('light')">Light Clean</button>
+        <button class="swatch" style="background:#0284c7;color:#fff" onclick="setTheme('blue')">Classic Blue</button>
+        <button class="swatch" style="background:#ea580c;color:#fff" onclick="setTheme('warm')">Warm Elegant</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Business Details</h3>
+      <label>Business Name*</label><input id="set-name">
+      <label>Address</label><input id="set-address">
+      <label>Phone</label><input id="set-phone">
+      <label>GSTIN</label><input id="set-gstin">
+      <button onclick="saveSettings()">Save Settings</button>
+    </div>
+    <div class="card">
+      <h3>Data Backup & Restore</h3>
+      <div class="rowbtns">
+        <button class="sec" onclick="exportData()">Export Backup</button>
+        <button class="sec" onclick="document.getElementById('import-file').click()">Import Backup</button>
+      </div>
+      <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
+    <div class="card" id="admin-settings-card">
+      <h3>Login Credentials Setup</h3>
+      <div id="admin-only-cred">
+        <label>Admin Username</label><input id="set-admin-u">
+        <label>Admin Password</label><input id="set-admin-p" type="password">
+      </div>
+      <label>Staff Username</label><input id="set-staff-u">
+      <label>Staff Password</label><input id="set-staff-p" type="password">
+      <button class="sec" onclick="updateLogins()">Update Credentials</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<nav id="main-nav">
+  <button class="on" onclick="showTab('dash',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
+  <button id="nav-items-btn" onclick="showTab('items',this)"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>Items</button>
+  <button onclick="showTab('bill',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>New Bill</button>
+  <button onclick="showTab('bills',this)"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>All Bills</button>
+  <button onclick="showTab('more',this)"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>More</button>
+</nav>
+
+<script>
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let items=load('items',[]);
+let bills=load('bills',[]);
+let settings=load('settings',{name:'DS WORLD',address:'',phone:'',gstin:''});
+let stockLimits=load('stockLimits',{min:3,max:100});
+let logins=load('logins',{adminU:'admin',adminP:'1234',staffU:'staff',staffP:'1234'});
+let currentRole=null;
+let theme=load('theme','light');
+let cart=[];
+let editingId=null;
+let editingItemId=null;
+let selectedItem=null;
+let mixBase=0;
+let lastReceiptText='';
+let lastReceiptCustomerPhone='';
+
+function closeModalGeneric(){document.getElementById('app-modal').classList.remove('show')}
+function showAlert(msg){
+  document.getElementById('modal-msg').textContent=msg;
+  document.getElementById('modal-input').style.display='none';
+  document.getElementById('modal-btns').innerHTML='<button onclick="closeModalGeneric()">OK</button>';
+  document.getElementById('app-modal').classList.add('show');
+}
+function showConfirm(msg,onYes){
+  document.getElementById('modal-msg').textContent=msg;
+  document.getElementById('modal-input').style.display='none';
+  document.getElementById('modal-btns').innerHTML='<button class="ghost" onclick="closeModalGeneric()">Cancel</button><button id="modal-yes-btn">Yes</button>';
+  document.getElementById('app-modal').classList.add('show');
+  document.getElementById('modal-yes-btn').onclick=function(){closeModalGeneric();onYes();};
+}
+
+let scannerStream=null,scannerCallback=null,scannerInterval=null;
+const BARCODE_FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','codabar','itf'];
+function openScanner(cb){
+  scannerCallback=cb;
+  if(!('BarcodeDetector' in window)){showAlert('Camera barcode scanning supported nahi hai.');return;}
+  document.getElementById('cam-modal').style.display='flex';
+  document.getElementById('cam-status').textContent='Barcode ko frame mein rakhein...';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+    scannerStream=stream;
+    const video=document.getElementById('cam-video');
+    video.srcObject=stream;video.play();
+    let detector=new BarcodeDetector({formats:BARCODE_FORMATS});
+    scannerInterval=setInterval(function(){
+      if(video.readyState<2)return;
+      detector.detect(video).then(function(codes){
+        if(codes.length>0){const val=codes[0].rawValue;closeScanner();if(scannerCallback)scannerCallback(val);}
+      }).catch(function(){});
+    },120);
+  }).catch(function(){showAlert('Camera permission nahi mili.');closeScanner();});
+}
+function closeScanner(){
+  document.getElementById('cam-modal').style.display='none';
+  if(scannerInterval)clearInterval(scannerInterval);
+  if(scannerStream)scannerStream.getTracks().forEach(function(t){t.stop()});
+  scannerStream=null;scannerInterval=null;
+}
+
+function applyTheme(name){document.documentElement.setAttribute('data-theme',name)}
+function setTheme(name){theme=name;save('theme',name);applyTheme(name)}
+
+function checkStockAlerts(){
+  const lowItems=items.filter(function(i){return (i.stock||0)<=stockLimits.min});
+  document.getElementById('alert-count').textContent=lowItems.length;
+}
+
+function openStockAlertModal(){
+  const lowItems=items.filter(function(i){return (i.stock||0)<=stockLimits.min});
+  if(!lowItems.length){
+    showAlert('Sabhi items ka stock safe limit mein hai!');
+    return;
+  }
+  let html='<div style="max-height:40vh;overflow:auto;text-align:left">';
+  lowItems.forEach(function(i){
+    html+='<div class="row"><span><b>'+i.name+'</b></span><span class="stockbadge low">'+i.stock+' in stock</span></div>';
+  });
+  html+='</div>';
+  document.getElementById('modal-msg').innerHTML='<h3>Low Stock Alerts</h3>'+html;
+  document.getElementById('modal-input').style.display='none';
+  document.getElementById('modal-btns').innerHTML='<button onclick="closeModalGeneric()">Close</button>';
+  document.getElementById('app-modal').classList.add('show');
+}
+
+function doLogin(){
+  const u=document.getElementById('lg-user').value.trim();
+  const p=document.getElementById('lg-pass').value;
+  if(u===logins.adminU && p===logins.adminP){
+    currentRole='admin';
+    initAppSession();
+  }else if(u===logins.staffU && p===logins.staffP){
+    currentRole='staff';
+    initAppSession();
+  }else{
+    document.getElementById('lg-error').style.display='block';
+  }
+}
+function initAppSession(){
+  document.getElementById('login-screen').style.display='none';
+  if(currentRole==='staff'){
+    document.getElementById('nav-items-btn').style.display='none';
+    document.getElementById('b-price').readOnly=true;
+    document.getElementById('admin-only-cred').style.display='none';
+  }else{
+    document.getElementById('nav-items-btn').style.display='flex';
+    document.getElementById('b-price').readOnly=false;
+    document.getElementById('admin-only-cred').style.display='block';
+  }
+  applySettings();
+  applyTheme(theme);
+  renderDash();
+  renderBills();
+  checkStockAlerts();
+}
+function doLogout(){
+  showConfirm('Logout karna hai?',function(){
+    currentRole=null;
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('lg-user').value='';document.getElementById('lg-pass').value='';
+    document.getElementById('lg-error').style.display='none';
+  });
+}
+function updateLogins(){
+  const su=document.getElementById('set-staff-u').value.trim();
+  const sp=document.getElementById('set-staff-p').value;
+  if(!su||!sp){showAlert('Staff username aur password zaroori hai');return;}
+  
+  if(currentRole==='admin'){
+    const au=document.getElementById('set-admin-u').value.trim();
+    const ap=document.getElementById('set-admin-p').value;
+    if(!au||!ap){showAlert('Admin username aur password zaroori hai');return;}
+    logins.adminU=au;logins.adminP=ap;
+  }
+  logins.staffU=su;logins.staffP=sp;
+  save('logins',logins);
+  showAlert('Login credentials update ho gaye!');
+}
+function saveStockLimits(){
+  const min=parseFloat(document.getElementById('set-min-stock').value)||3;
+  const max=parseFloat(document.getElementById('set-max-stock').value)||100;
+  stockLimits={min,max};
+  save('stockLimits',stockLimits);
+  checkStockAlerts();
+  showAlert('Stock limits save ho gayi!');
+}
+
+function applySettings(){
+  document.getElementById('hd-name').textContent=settings.name||'DS WORLD';
+  document.getElementById('lg-logo').textContent=(settings.name||'DS').trim().slice(0,2).toUpperCase();
+  document.getElementById('hd-logo').textContent=(settings.name||'DS').trim().slice(0,2).toUpperCase();
+  document.getElementById('set-name').value=settings.name||'';
+  document.getElementById('set-address').value=settings.address||'';
+  document.getElementById('set-phone').value=settings.phone||'';
+  document.getElementById('set-gstin').value=settings.gstin||'';
+  document.getElementById('set-admin-u').value=logins.adminU;
+  document.getElementById('set-admin-p').value=logins.adminP;
+  document.getElementById('set-staff-u').value=logins.staffU;
+  document.getElementById('set-staff-p').value=logins.staffP;
+  document.getElementById('set-min-stock').value=stockLimits.min;
+  document.getElementById('set-max-stock').value=stockLimits.max;
+}
+function saveSettings(){
+  settings={name:document.getElementById('set-name').value.trim()||'DS WORLD',
+    address:document.getElementById('set-address').value.trim(),
+    phone:document.getElementById('set-phone').value.trim(),
+    gstin:document.getElementById('set-gstin').value.trim()};
+  save('settings',settings);
+  applySettings();
+  showAlert('Settings save ho gayi');
+}
+
+function exportData(){
+  const data={items,bills,settings,logins,stockLimits,theme};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='backup.json';a.click();URL.revokeObjectURL(url);
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(evt){
+    try{
+      const d=JSON.parse(evt.target.result);
+      if(d.items)items=d.items;
+      if(d.bills)bills=d.bills;
+      if(d.settings)settings=d.settings;
+      if(d.logins)logins=d.logins;
+      if(d.stockLimits)stockLimits=d.stockLimits;
+      if(d.theme)theme=d.theme;
+      save('items',items);save('bills',bills);save('settings',settings);save('logins',logins);save('stockLimits',stockLimits);save('theme',theme);
+      showAlert('Backup restore ho gaya!');
+      applySettings();applyTheme(theme);renderDash();renderBills();checkStockAlerts();
+    }catch(err){showAlert('Invalid backup file!');}
+  };
+  reader.readAsText(file);
+}
+
+function importExcelFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(evt){
+    try{
+      const data=new Uint8Array(evt.target.result);
+      const workbook=XLSX.read(data,{type:'array'});
+      const worksheet=workbook.Sheets[workbook.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(worksheet,{header:1});
+      let addedCount=0;
+      for(let i=0; i<rows.length; i++){
+        const row=rows[i];
+        if(!row||row.length===0)continue;
+        const cols=row.map(function(c){return c!==undefined && c!==null?String(c).trim():'';});
+        if(i===0 && (cols[0].toLowerCase().includes('name')||cols[0].toLowerCase().includes('item')))continue;
+        if(cols.length>=1 && cols[0]!==''){
+          const name=cols[0];
+          const size=cols[1]||'';
+          const style=cols[2]||'';
+          const shade=cols[3]||'';
+          let mrp=parseFloat(cols[4])||0;
+          let rate=parseFloat(cols[5])||mrp;
+          let gst=parseFloat(cols[6])||0;
+          let stock=parseFloat(cols[7])||0;
+          let barcode=cols[8]||'';
+
+          items.push({id:Date.now()+Math.random()+i,name,size,style,shade,mrp,rate,gst,stock,barcode});
+          addedCount++;
+        }
+      }
+      save('items',items);renderItems();checkStockAlerts();
+      showAlert(addedCount+' items import ho gaye!');
+    }catch(err){showAlert('Excel file read karne mein error aayi!');}
+    e.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportExcel(type){
+  let csvContent='data:text/csv;charset=utf-8,';
+  let filename='report.csv';
+  if(type==='sales'){
+    csvContent+='Bill No,Date,Customer,Payment Mode,Total\n';
+    bills.forEach(function(b){csvContent+=[b.bNo,b.date,`"${b.customer}"`,b.payMode||'Cash',b.total].join(',')+'\n';});
+    filename='sales_report.csv';
+  }else if(type==='register'){
+    csvContent+='Bill No,Date,Customer,Phone,Items,Total\n';
+    bills.forEach(function(b){
+      let itms=b.items.map(function(i){return i.name+'('+i.qty+'x'+i.price+')'}).join(';');
+      csvContent+=[b.bNo,b.date,`"${b.customer}"`,`"${b.customerPhone||''}"`,`"${itms}"`,b.total].join(',')+'\n';
+    });
+    filename='sales_register.csv';
+  }else if(type==='stock'){
+    csvContent+='Item Name,Size,Style,Shade,MRP,Rate,Stock,Barcode\n';
+    items.forEach(function(i){csvContent+=[`"${i.name}"`,`"${i.size}"`,`"${i.style}"`,`"${i.shade}"`,i.mrp,i.rate,i.stock,`"${i.barcode}"`].join(',')+'\n';});
+    filename='stock_report.csv';
+  }
+  const encodedUri=encodeURI(csvContent);
+  const link=document.createElement('a');link.setAttribute('href',encodedUri);link.setAttribute('download',filename);
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+}
+
+function showTab(name,btn){
+  if(name==='items' && currentRole==='staff')return;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});
+  document.getElementById('tab-'+name).classList.add('on');
+  document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on')});
+  if(btn)btn.classList.add('on');
+  if(name==='dash')renderDash();
+  if(name==='items')renderItems();
+  if(name==='bill')renderBillTab();
+  if(name==='bills')renderBills();
+  if(name==='more'){renderReport();renderRegister();renderStock();}
+}
+function showMore(which,btn){
+  document.querySelectorAll('.subtabs button').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+  ['sales','register','stock','settings'].forEach(function(k){
+    document.getElementById('more-'+k).style.display=(k===which)?'block':'none';
+  });
+}
+
+function addItem(){
+  const name=document.getElementById('i-name').value.trim();
+  const rate=parseFloat(document.getElementById('i-rate').value);
+  const mrp=parseFloat(document.getElementById('i-mrp').value)||rate;
+  if(!name||!rate){showAlert('Name aur Selling Rate zaroori hai');return;}
+  const size=document.getElementById('i-size').value.trim();
+  const style=document.getElementById('i-style').value.trim();
+  const shade=document.getElementById('i-shade').value.trim();
+  const gst=parseFloat(document.getElementById('i-gst').value)||0;
+  const stock=parseFloat(document.getElementById('i-stock').value)||0;
+  const barcode=document.getElementById('i-barcode').value.trim();
+
+  if(editingItemId){
+    const it=items.find(function(i){return i.id===editingItemId});
+    if(it){it.name=name;it.size=size;it.style=style;it.shade=shade;it.mrp=mrp;it.rate=rate;it.gst=gst;it.stock=stock;it.barcode=barcode;}
+    save('items',items);cancelItemEdit();renderItems();checkStockAlerts();showAlert('Item update ho gaya!');
+    return;
+  }
+  items.push({id:Date.now(),name,size,style,shade,mrp,rate,gst,stock,barcode});
+  save('items',items);cancelItemEdit();renderItems();checkStockAlerts();
+}
+function editItem(id){
+  const it=items.find(function(i){return i.id===id});if(!it)return;
+  editingItemId=id;
+  document.getElementById('i-name').value=it.name;
+  document.getElementById('i-size').value=it.size||'';
+  document.getElementById('i-style').value=it.style||'';
+  document.getElementById('i-shade').value=it.shade||'';
+  document.getElementById('i-mrp').value=it.mrp||it.rate;
+  document.getElementById('i-rate').value=it.rate;
+  document.getElementById('i-gst').value=it.gst;
+  document.getElementById('i-stock').value=it.stock||0;
+  document.getElementById('i-barcode').value=it.barcode||'';
+  document.getElementById('i-formtitle').textContent='Item Edit Karein';
+  document.getElementById('i-savebtn').textContent='Update Item';
+  document.getElementById('i-cancelbtn').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelItemEdit(){
+  editingItemId=null;
+  ['i-name','i-size','i-style','i-shade','i-mrp','i-rate','i-barcode'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('i-gst').value='0';document.getElementById('i-stock').value='0';
+  document.getElementById('i-formtitle').textContent='Naya Item Add Karein';
+  document.getElementById('i-savebtn').textContent='Save Item';
+  document.getElementById('i-cancelbtn').style.display='none';
+}
+function deleteItem(id){
+  showConfirm('Item delete karna hai?',function(){
+    items=items.filter(function(i){return i.id!==id});save('items',items);renderItems();checkStockAlerts();
+  });
+}
+function addStock(id){
+  showPrompt('Kitna stock add karna hai?','0',function(val){
+    const q=parseFloat(val);if(!q||q<=0)return;
+    const it=items.find(function(i){return i.id===id});if(it)it.stock=(it.stock||0)+q;
+    save('items',items);renderItems();checkStockAlerts();
+  });
+}
+function renderItems(){
+  document.getElementById('i-list').innerHTML=items.length?items.map(function(i){
+    let extra=[];if(i.size)extra.push('Size: '+i.size);if(i.style)extra.push('Style: '+i.style);if(i.shade)extra.push('Shade: '+i.shade);
+    return '<div class="row"><div><div><b>'+i.name+'</b></div><div class="muted" style="padding:0;text-align:left">MRP: Rs '+i.mrp+' | Rate: Rs '+i.rate+' ('+extra.join(', ')+')</div></div>'+
+    '<div style="text-align:right"><span class="stockbadge '+((i.stock||0)<=stockLimits.min?'low':'')+'">'+(i.stock||0)+' stock</span><br>'+
+    '<a href="#" onclick="editItem('+i.id+');return false;" style="font-size:11px;color:var(--accent);margin-right:8px">Edit</a>'+
+    '<a href="#" onclick="deleteItem('+i.id+');return false;" style="font-size:11px;color:var(--danger);margin-right:8px">Delete</a>'+
+    '<a href="#" onclick="addStock('+i.id+');return false;" style="font-size:11px;color:var(--accent)">+ Stock</a></div></div>';
+  }).join(''):'<div class="muted">Koi item nahi</div>';
+}
+
+function populateItemsDatalist(){
+  document.getElementById('items-dl').innerHTML=items.map(function(i){
+    let label=i.name;if(i.size)label+=' - Size: '+i.size;if(i.style)label+=' - Style: '+i.style;return '<option value="'+label+'">';
+  }).join('');
+}
+function onSearchPick(){
+  const val=document.getElementById('b-search').value.trim();
+  const it=items.find(function(i){
+    let label=i.name;if(i.size)label+=' - Size: '+i.size;if(i.style)label+=' - Style: '+i.style;
+    return i.name===val || label===val;
+  });
+  if(it){selectedItem=it;document.getElementById('b-price').value=it.rate;}else selectedItem=null;
+}
+function scanForBill(){
+  openScanner(function(code){
+    const it=items.find(function(i){return i.barcode&&i.barcode===code});
+    if(it){
+      cart.push({itemId:it.id,name:it.name,size:it.size||'',style:it.style||'',shade:it.shade||'',qty:1,price:it.rate,gst:it.gst});
+      renderCart();showAlert(it.name+' add ho gaya');
+    }else{showAlert('Barcode se item nahi mila: '+code);}
+  });
+}
+function renderBillTab(){
+  populateItemsDatalist();renderCart();
+}
+function addToCart(){
+  if(!selectedItem){showAlert('Pehle item select karein');return;}
+  const qty=parseFloat(document.getElementById('b-qty').value)||1;
+  const price=parseFloat(document.getElementById('b-price').value)||selectedItem.rate;
+  cart.push({itemId:selectedItem.id,name:selectedItem.name,size:selectedItem.size||'',style:selectedItem.style||'',shade:selectedItem.shade||'',qty,price,gst:selectedItem.gst});
+  document.getElementById('b-search').value='';document.getElementById('b-qty').value='1';document.getElementById('b-price').value='';
+  selectedItem=null;renderCart();
+}
+function renderCart(){
+  document.getElementById('b-cart').innerHTML=cart.length?cart.map(function(c,idx){
+    let det=c.size?(' ('+c.size+')'):'';
+    let lt=c.qty*c.price*(1+c.gst/100);
+    return '<div class="itemline"><span>'+c.name+det+' ('+c.qty+' x '+c.price+')</span><span>Rs '+lt.toFixed(2)+' <a href="#" onclick="cart.splice('+idx+',1);renderCart();return false;" style="color:var(--danger);font-weight:700">&times;</a></span></div>';
+  }).join(''):'<div class="muted">Koi item nahi joda</div>';
+  recalcTotal();
+}
+function cartSubtotal(){
+  let s=0;cart.forEach(function(c){s+=c.qty*c.price*(1+c.gst/100)});return s;
+}
+function currentBillTotal(){
+  const disc=parseFloat(document.getElementById('b-disc').value)||0;
+  return Math.max(0,cartSubtotal()-disc);
+}
+function recalcTotal(){
+  const total=currentBillTotal();
+  document.getElementById('b-sub').textContent='Rs '+cartSubtotal().toFixed(2);
+  document.getElementById('b-total').textContent='Rs '+total.toFixed(2);
+  
+  const psInput=document.getElementById('ps-amt');
+  if(!psInput.value || parseFloat(psInput.value)===0){
+    psInput.value=total.toFixed(2);
+  }
+}
+function onPayModeChange(){
+  const mode=document.getElementById('pay-mode').value;
+  document.getElementById('pay-single').style.display=mode==='Mix'?'none':'block';
+  document.getElementById('pay-mix').style.display=mode==='Mix'?'block':'none';
+  const total=currentBillTotal();
+  if(mode!=='Mix'){
+    document.getElementById('ps-amt').value=total.toFixed(2);
+  }else{
+    mixBase=total;
+    document.getElementById('pm-cash').value='0';
+    document.getElementById('pm-upi').value=mixBase.toFixed(2);
+    document.getElementById('pm-card').value='0';
+  }
+}
+function cascadeCash(){
+  const cash=parseFloat(document.getElementById('pm-cash').value)||0;
+  const upi=Math.max(0,mixBase-cash);
+  document.getElementById('pm-upi').value=upi.toFixed(2);
+  document.getElementById('pm-card').value='0';
+}
+function cascadeUpi(){
+  const cash=parseFloat(document.getElementById('pm-cash').value)||0;
+  const upi=parseFloat(document.getElementById('pm-upi').value)||0;
+  const card=Math.max(0,mixBase-cash-upi);
+  document.getElementById('pm-card').value=card.toFixed(2);
+}
+
+function adjustStock(billItems,sign){
+  billItems.forEach(function(c){
+    if(!c.itemId)return;
+    const it=items.find(function(i){return i.id===c.itemId});if(it)it.stock=(it.stock||0)+sign*c.qty;
+  });
+}
+
+function generateBill(){
+  if(!cart.length){showAlert('Bill mein item add karein');return;}
+  const subtotal=cart.reduce(function(s,c){return s+c.qty*c.price},0);
+  const gstAmt=cart.reduce(function(s,c){return s+c.qty*c.price*c.gst/100},0);
+  const discount=parseFloat(document.getElementById('b-disc').value)||0;
+  const total=Math.max(0,Math.round((subtotal+gstAmt-discount)*100)/100);
+  
+  const cname=document.getElementById('b-cname').value.trim()||'Walk-in';
+  const cphone=document.getElementById('b-cphone').value.trim();
+  const payMode=document.getElementById('pay-mode').value;
+  
+  let cashAmt=0, upiAmt=0, cardAmt=0;
+  if(payMode==='Cash') cashAmt=total;
+  else if(payMode==='UPI') upiAmt=total;
+  else if(payMode==='Card') cardAmt=total;
+  else if(payMode==='Mix'){
+    cashAmt=parseFloat(document.getElementById('pm-cash').value)||0;
+    upiAmt=parseFloat(document.getElementById('pm-upi').value)||0;
+    cardAmt=parseFloat(document.getElementById('pm-card').value)||0;
+  }
+
+  lastReceiptCustomerPhone=cphone;
+
+  if(editingId){
+    const idx=bills.findIndex(function(b){return b.id===editingId});
+    if(idx>-1){
+      adjustStock(bills[idx].items,1);adjustStock(cart,-1);save('items',items);
+      bills[idx]=Object.assign({},bills[idx],{customer:cname,customerPhone:cphone,payMode,cashAmt,upiAmt,cardAmt,items:cart.slice(),subtotal,gst:gstAmt,discount,total,status:'paid'});
+      save('bills',bills);
+      renderBills();renderDash();checkStockAlerts();
+      showAlert('Bill update ho gaya!');
+    }
+    cancelEdit();return;
+  }
+
+  adjustStock(cart,-1);save('items',items);
+  const bNo='INV-'+String(bills.length+1).padStart(4,'0');
+  const bill={id:Date.now(),bNo,date:new Date().toLocaleString('en-IN'),rawDate:new Date().toISOString().split('T')[0],customer:cname,customerPhone:cphone,payMode,cashAmt,upiAmt,cardAmt,items:cart.slice(),subtotal,gst:gstAmt,discount,total,status:'paid'};
+  bills.push(bill);
+  save('bills',bills);
+  
+  renderBills();renderDash();checkStockAlerts();
+  printReceipt(bill);
+  
+  cart=[];document.getElementById('b-disc').value='0';document.getElementById('b-cname').value='';document.getElementById('b-cphone').value='';renderCart();
+}
+
+function printReceipt(bill){
+  const lines=bill.items.map(function(c){return c.name+(c.size?' ['+c.size+']':'')+'\n  ('+c.qty+' x '+c.price+') - Rs '+(c.qty*c.price*(1+c.gst/100)).toFixed(2)}).join('\n');
+  lastReceiptCustomerPhone=bill.customerPhone||'';
+  const text=(settings.name||'DS WORLD')+'\n'+(settings.address||'')+'\n'+(settings.phone?'Ph: '+settings.phone+'\n':'')+'--------------------------------\nBill No: '+bill.bNo+'\nDate: '+bill.date+'\nCustomer: '+bill.customer+(bill.customerPhone?' ('+bill.customerPhone+')':'')+'\nPayment Mode: '+(bill.payMode||'Cash')+'\n--------------------------------\n'+lines+'\n--------------------------------\nTOTAL: Rs '+bill.total.toFixed(2)+'\n--------------------------------\nThank You! Visit Again';
+  lastReceiptText=text;
+  document.getElementById('receipt-content').innerHTML=text.split('\n').map(function(l){return '<div>'+(l||'&nbsp;')+'</div>'}).join('');
+  document.getElementById('print-modal').classList.add('show');
+}
+function doPrintNow(){window.print();}
+function shareOnWhatsApp(){
+  let phone=lastReceiptCustomerPhone?lastReceiptCustomerPhone.replace(/\D/g,''):'';
+  window.open('https://wa.me/'+(phone.length>=10?'91'+phone.slice(-10):'')+'?text='+encodeURIComponent(lastReceiptText),'_blank');
+}
+
+function renderDash(){
+  document.getElementById('d-cnt').textContent=bills.length;
+  const totalSales=bills.reduce(function(s,b){return s+b.total},0);
+  document.getElementById('d-sales').textContent='Rs '+totalSales.toFixed(2);
+  
+  const todayStr=new Date().toLocaleDateString('en-IN');
+  const todaySales=bills.filter(function(b){return b.date.includes(todayStr)}).reduce(function(s,b){return s+b.total},0);
+  document.getElementById('d-today-sales').textContent='Rs '+todaySales.toFixed(2);
+
+  document.getElementById('d-recent').innerHTML=bills.slice(-5).reverse().map(function(b){return '<div class="row"><span><b>'+b.bNo+'</b> - '+b.customer+' <span style="font-size:11px;color:var(--sub)">['+(b.payMode||'Cash')+']</span></span><span>Rs '+b.total.toFixed(2)+'</span></div>'}).join('')||'<div class="muted">Koi bill nahi</div>';
+}
+
+function editBill(id){
+  if(currentRole==='staff'){showAlert('Staff bill edit nahi kar sakta');return;}
+  const bill=bills.find(function(b){return b.id===id});if(!bill)return;
+  editingId=id;cart=bill.items.map(function(c){return Object.assign({},c)});
+  showTab('bill');renderBillTab();
+  document.getElementById('b-cname').value=bill.customer!=='Walk-in'?bill.customer:'';
+  document.getElementById('b-cphone').value=bill.customerPhone||'';
+  document.getElementById('pay-mode').value=bill.payMode||'Cash';
+  onPayModeChange();
+  if(bill.payMode==='Mix'){
+    document.getElementById('pm-cash').value=bill.cashAmt||0;
+    document.getElementById('pm-upi').value=bill.upiAmt||0;
+    document.getElementById('pm-card').value=bill.cardAmt||0;
+  }
+  document.getElementById('b-disc').value=bill.discount||0;
+  document.getElementById('b-savebtn').textContent='Update Bill';
+  document.getElementById('b-cancelbtn').style.display='block';
+}
+function cancelEdit(){
+  editingId=null;cart=[];document.getElementById('b-savebtn').textContent='Generate Bill & Print';
+  document.getElementById('b-cancelbtn').style.display='none';
+  document.getElementById('b-cname').value='';document.getElementById('b-cphone').value='';renderCart();
+}
+function deleteBill(id){
+  if(currentRole==='staff'){showAlert('Staff bill delete nahi kar sakta');return;}
+  showConfirm('Bill delete karna hai?',function(){
+    const b=bills.find(function(x){return x.id===id});if(b)adjustStock(b.items,1);
+    bills=bills.filter(function(x){return x.id!==id});save('bills',bills);renderBills();renderDash();checkStockAlerts();
+  });
+}
+function renderBills(){
+  const q=(document.getElementById('s-search').value||'').toLowerCase();
+  const list=bills.filter(function(b){return b.bNo.toLowerCase().includes(q)||b.customer.toLowerCase().includes(q)}).reverse();
+  document.getElementById('bills-list').innerHTML=list.length?list.map(function(b){
+    let act=currentRole==='admin'?('<button class="small sec" onclick="editBill('+b.id+')">Edit</button><button class="small ghost" onclick="deleteBill('+b.id+')">Delete</button>'):'';
+    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">'+b.date+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span class="badge paid">Paid</span></div></div><div class="rowbtns"><button class="small sec" onclick="printReceipt(bills.find(function(x){return x.id==='+b.id+'}))">Print</button>'+act+'</div></div>';
+  }).join(''):'<div class="muted">Koi bill nahi mila</div>';
+}
+
+function renderReport(){
+  const fDate=document.getElementById('r-from').value;
+  const tDate=document.getElementById('r-to').value;
+  const pMode=document.getElementById('r-paymode').value;
+
+  let matchedBills=[];
+  let filteredTotalAmount=0;
+  let cSum=0, uSum=0, cdSum=0;
+
+  bills.forEach(function(b){
+    if(fDate && b.rawDate && b.rawDate<fDate) return;
+    if(tDate && b.rawDate && b.rawDate>tDate) return;
+
+    let bCash=b.cashAmt !== undefined ? b.cashAmt : ((b.payMode||'Cash')==='Cash'?b.total:0);
+    let bUpi=b.upiAmt !== undefined ? b.upiAmt : ((b.payMode||'Cash')==='UPI'?b.total:0);
+    let bCard=b.cardAmt !== undefined ? b.cardAmt : ((b.payMode||'Cash')==='Card'?b.total:0);
+
+    cSum+=bCash; uSum+=bUpi; cdSum+=bCard;
+
+    let includeBill=false;
+    let amtForReport=0;
+
+    if(pMode==='All'){
+      includeBill=true;
+      amtForReport=b.total;
+    }else if(pMode==='Cash' && bCash>0){
+      includeBill=true;
+      amtForReport=bCash;
+    }else if(pMode==='UPI' && bUpi>0){
+      includeBill=true;
+      amtForReport=bUpi;
+    }else if(pMode==='Card' && bCard>0){
+      includeBill=true;
+      amtForReport=bCard;
+    }
+
+    if(includeBill){
+      matchedBills.push({bNo:b.bNo, customer:b.customer, mode:b.payMode||'Cash', reportAmt:amtForReport, fullTotal:b.total, date:b.date});
+      filteredTotalAmount+=amtForReport;
+    }
+  });
+
+  document.getElementById('r-cnt').textContent=matchedBills.length;
+  document.getElementById('r-sales').textContent='Rs '+filteredTotalAmount.toFixed(2);
+  document.getElementById('r-breakdown').innerHTML='Cash:Rs '+cSum.toFixed(0)+'<br>UPI:Rs '+uSum.toFixed(0)+'<br>Card:Rs '+cdSum.toFixed(0);
+
+  document.getElementById('r-list').innerHTML=matchedBills.length?matchedBills.slice().reverse().map(function(m){
+    return '<div class="row"><span><b>'+m.bNo+'</b> - '+m.customer+' <span style="font-size:11px;color:var(--sub)">['+m.mode+']</span></span><span><b>Rs '+m.reportAmt.toFixed(2)+'</b>'+(m.reportAmt!==m.fullTotal?' <small style="color:var(--sub)">(Bill: '+m.fullTotal+')</small>':'')+'</span></div>';
+  }).join(''):'<div class="muted">Koi data nahi mila</div>';
+}
+
+function renderRegister(){
+  const q=(document.getElementById('reg-search').value||'').toLowerCase();
+  const list=bills.filter(function(b){return b.bNo.toLowerCase().includes(q)||b.customer.toLowerCase().includes(q)}).reverse();
+  document.getElementById('reg-list').innerHTML=list.length?list.map(function(b){
+    let itemsStr=b.items.map(function(i){return i.name+' ('+i.qty+' x '+i.price+')'}).join(', ');
+    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">Items: '+itemsStr+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span style="font-size:11px;color:var(--sub)">'+b.date+'</span></div></div></div>';
+  }).join(''):'<div class="muted">Sales register empty</div>';
+}
+
+function renderStock(){
+  const q=(document.getElementById('st-search').value||'').toLowerCase();
+  const list=items.filter(function(i){return i.name.toLowerCase().includes(q)});
+  document.getElementById('st-list').innerHTML=list.length?list.map(function(i){return '<div class="row"><span>'+i.name+' ('+(i.size||'')+')</span><span class="stockbadge '+((i.stock||0)<=stockLimits.min?'low':'')+'">'+i.stock+' in stock</span></div>'}).join(''):'<div class="muted">Stock empty</div>';
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  const saveBtn = document.getElementById('b-savebtn');
+  if(saveBtn){
+    saveBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      generateBill();
+    });
+  }
+});
+</script>
+</body>
+</html>
