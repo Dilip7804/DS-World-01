@@ -375,7 +375,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 
 <script>
 // Google Drive Web App URL
-var webAppUrl = "https://script.google.com/macros/s/AKfycby6RvvSOlv3uoN9bLdB9cf7TBAwsMLPeAvle5M6NNNw_CfiYeV6HPQ5OcJUd5zKHv0X/exec";
+var webAppUrl = "https://script.google.com/macros/s/AKfycbwmtTJVrUmiB0rwBKJVXpL0OSpr8HL4NEaG4J_Wtx8_uWsSEdmsIzMbtBXridGCMXNf/exec";
 
 // Cloud Export Function (Updated with text/plain for no-cors fix)
 function cloudExport() {
@@ -385,16 +385,11 @@ function cloudExport() {
   }
   let lastBill = bills[bills.length - 1];
   
-  // Items ko readable text me badal rahe hain (jaise: Shirt (2 x 500))
-  let itemsFormatted = lastBill.items.map(function(i) {
-    return i.name + " (" + i.qty + " x " + i.price + ")";
-  }).join(", ");
-
   var data = {
     action: "export",
     billNo: lastBill.bNo || "1",
     customerName: lastBill.customer || "Customer",
-    items: itemsFormatted,
+    items: lastBill.items || [],
     totalAmount: lastBill.total || 0,
     date: lastBill.date || new Date().toLocaleString()
   };
