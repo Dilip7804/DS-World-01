@@ -377,7 +377,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 // Google Drive Web App URL
 var webAppUrl = "https://script.google.com/macros/s/AKfycby6RvvSOlv3uoN9bLdB9cf7TBAwsMLPeAvle5M6NNNw_CfiYeV6HPQ5OcJUd5zKHv0X/exec";
 
-// Cloud Export Function
+// Cloud Export Function (Updated with text/plain for no-cors fix)
 function cloudExport() {
   if(bills.length === 0) {
     alert("Export karne ke liye koi bill nahi hai!");
@@ -396,13 +396,12 @@ function cloudExport() {
   fetch(webAppUrl, {
     method: "POST",
     mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(data)
   }).then(() => {
     alert("Data successfully Google Sheet par Export ho gaya!");
   }).catch(err => alert("Error: " + err));
 }
-
 // Cloud Import Function
 function cloudImport() {
   fetch(webAppUrl)
