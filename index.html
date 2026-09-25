@@ -384,11 +384,17 @@ function cloudExport() {
     return;
   }
   let lastBill = bills[bills.length - 1];
+  
+  // Items ko readable text me badal rahe hain (jaise: Shirt (2 x 500))
+  let itemsFormatted = lastBill.items.map(function(i) {
+    return i.name + " (" + i.qty + " x " + i.price + ")";
+  }).join(", ");
+
   var data = {
     action: "export",
     billNo: lastBill.bNo || "1",
     customerName: lastBill.customer || "Customer",
-    items: JSON.stringify(lastBill.items || []),
+    items: itemsFormatted,
     totalAmount: lastBill.total || 0,
     date: lastBill.date || new Date().toLocaleString()
   };
