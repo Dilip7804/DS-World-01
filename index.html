@@ -419,37 +419,51 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
-// Hidden Iframe sync function to talk to Google Sheet seamlessly
-function sendToGoogleSheet(url) {
-  var iframe = document.getElementById('hidden-sync-frame');
-  if (!iframe) {
-    iframe = document.createElement('iframe');
-    iframe.id = 'hidden-sync-frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-  }
-  iframe.src = url;
-}
-
+// Reliable POST sync using navigator.sendBeacon
 function cloudExportSilently(lastBill) {
   if(!lastBill) return;
   var itemsStr = (lastBill.items || []).map(function(i) {
     return i.name + (i.size ? " ["+i.size+"]" : "") + " (" + i.qty + " x " + i.price + ")";
   }).join("; ");
 
-  var url = webAppUrl + "?action=export&billNo=" + encodeURIComponent(lastBill.bNo || "1") +
-            "&customerName=" + encodeURIComponent(lastBill.customer || "Customer") +
-            "&totalAmount=" + encodeURIComponent(lastBill.total || 0) +
-            "&date=" + encodeURIComponent(lastBill.date || new Date().toLocaleString()) +
-            "&itemsStr=" + encodeURIComponent(itemsStr);
+  var payload = JSON.stringify({
+    action: "export",
+    billNo: lastBill.bNo || "1",
+    customerName: lastBill.customer || "Customer",
+    totalAmount: lastBill.total || 0,
+    date: lastBill.date || new Date().toLocaleString(),
+    itemsStr: itemsStr
+  });
 
-  sendToGoogleSheet(url);
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(webAppUrl, new Blob([payload], {type: 'application/json'}));
+  } else {
+    fetch(webAppUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: payload
+    }).catch(err => console.log("Sync error:", err));
+  }
 }
 
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  var url = webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo);
-  sendToGoogleSheet(url);
+  var payload = JSON.stringify({
+    action: "delete",
+    billNo: bNo
+  });
+
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(webAppUrl, new Blob([payload], {type: 'application/json'}));
+  } else {
+    fetch(webAppUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: payload
+    }).catch(err => console.log("Delete sync error:", err));
+  }
 }
 
 function cloudImport() {
@@ -967,7 +981,7 @@ function generateBill(){
 
   adjustStock(cart,-1);save('items',items);
   
-  // Robust Invoice Numbering logic (hamesha agla sahi number dega)
+  // Robust Invoice Numbering logic
   let nextSeq = 1;
   if(bills.length > 0) {
     let numbers = bills.map(b => {
