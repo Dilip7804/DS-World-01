@@ -424,7 +424,7 @@ let lastAutoSyncedBillNo = "";
 
 function cloudExportSilently(lastBill) {
   if(!lastBill || isSyncing) return;
-  if(lastAutoSyncedBillNo === lastBill.bNo) return; // Dubara same bill auto-sync nahi hoga
+  if(lastAutoSyncedBillNo === lastBill.bNo) return;
   
   isSyncing = true;
   lastAutoSyncedBillNo = lastBill.bNo;
@@ -449,6 +449,21 @@ function cloudExportSilently(lastBill) {
     isSyncing = false;
     console.log("Sync error:", err);
   });
+}
+
+// Google Sheet se bhi bill delete karne ke liye function
+function cloudDeleteBillSilently(bNo) {
+  if(!bNo) return;
+  var data = {
+    action: "delete",
+    billNo: bNo
+  };
+  fetch(webAppUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(data)
+  }).catch(err => console.log("Delete sync error:", err));
 }
 
 function cloudImport() {
@@ -989,7 +1004,7 @@ function printReceipt(bill){
 }
 function doPrintNow(){window.print();}
 function shareOnWhatsApp(){
-  let phone=lastReceiptCustomerPhone?lastReceiptCustomerPhone.replace(/\D/g, ''):'';
+  let phone=lastReceiptCustomerPhone?lastReceiptCustomerPhone.replace(/\D/g,''):'';
   window.open('https://wa.me/'+(phone.length>=10?'91'+phone.slice(-10):'')+'?text='+encodeURIComponent(lastReceiptText),'_blank');
 }
 
@@ -1028,15 +1043,22 @@ function cancelEdit(){
   document.getElementById('b-cancelbtn').style.display='none';
   document.getElementById('b-cname').value='';document.getElementById('b-cphone').value='';renderCart();
 }
+
 function deleteBill(bNo){
   if(currentRole==='staff'){showAlert('Staff bill delete nahi kar sakta');return;}
   showConfirm('Bill delete karna hai?',function(){
-    const b=bills.find(function(x){return String(x.bNo) === String(bNo) || x.id === bNo});if(b)adjustStock(b.items,1);
+    const b=bills.find(function(x){return String(x.bNo) === String(bNo) || x.id === bNo});
+    if(b) {
+      adjustStock(b.items,1);
+      // Google Sheet se bhi delete request bhej do
+      cloudDeleteBillSilently(b.bNo);
+    }
     bills=bills.filter(function(x){return String(x.bNo) !== String(bNo) && x.id !== bNo});
     save('bills',bills);renderBills();renderDash();checkStockAlerts();
-    showAlert('Bill delete ho gaya!');
+    showAlert('Bill app aur Google Sheet dono se delete ho gaya!');
   });
 }
+
 function renderBills(){
   const q=(document.getElementById('s-search').value||'').toLowerCase();
   const list=bills.filter(function(b){return b.bNo.toLowerCase().includes(q)||b.customer.toLowerCase().includes(q)}).reverse();
