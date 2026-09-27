@@ -76,13 +76,15 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
 .loginbox{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:30px 24px;box-shadow:0 10px 25px rgba(0,0,0,0.08);text-align:center;border:1px solid var(--border)}
 .loginbox .logo{width:60px;height:60px;font-size:26px;margin:0 auto 16px;border-radius:16px}
+#sub-screen{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+.subbox{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:24px;box-shadow:0 15px 35px rgba(0,0,0,0.12);text-align:center;border:1px solid var(--border)}
+.sub-plan-btn{background:var(--accent-bg);color:var(--accent);border:1.5px solid var(--accent);margin:8px 0;padding:12px;border-radius:10px;font-weight:600;cursor:pointer;width:100%}
+.sub-plan-btn:hover{background:var(--accent);color:#fff}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:55;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-ov.show{display:flex}
 .modal-box{background:var(--card);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border);box-shadow:0 15px 30px rgba(0,0,0,0.15)}
 .modal-box p{font-size:14px;margin:0 0 16px}
 #receipt-content{text-align:left;font-family:monospace;font-size:12px;max-height:50vh;overflow:auto;background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--border)}
-#cam-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:60;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px}
-#cam-video{width:100%;max-width:360px;border-radius:14px}
 .swatch{flex:1;padding:12px 6px;font-size:12px;font-weight:600;border-radius:10px;border:1.5px solid var(--border);box-shadow:none;cursor:pointer}
 @media print{
   body>*:not(#print-modal){display:none !important}
@@ -93,6 +95,21 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 </style>
 </head>
 <body>
+
+<div id="sub-screen">
+  <div class="subbox">
+    <h2 style="color:var(--danger);margin-top:0">Subscription Expired!</h2>
+    <p class="muted" style="padding:0">Aapka plan samapt ho gaya hai. Kripya apna plan select karein aur payment karke chalu karwayein.</p>
+    <div style="margin:16px 0;text-align:left">
+      <button class="sub-plan-btn" onclick="selectPlan(3)">3 Months Plan</button>
+      <button class="sub-plan-btn" onclick="selectPlan(6)">6 Months Plan</button>
+      <button class="sub-plan-btn" onclick="selectPlan(12)">1 Year (12 Months) Plan</button>
+    </div>
+    <div style="background:var(--bg);padding:12px;border-radius:10px;font-size:13px;border:1px solid var(--border)">
+      Payment ke liye sampark karein:<br><b>Phone: 7991505762</b> (Dilip Singh)
+    </div>
+  </div>
+</div>
 
 <div id="login-screen">
   <div class="loginbox">
@@ -123,15 +140,6 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
     </div>
     <button class="sec" style="margin-top:8px;background:#16a34a;color:#fff;border:none" onclick="shareOnWhatsApp()" id="wa-receipt-btn">Share on WhatsApp</button>
   </div>
-</div>
-
-<div id="cam-modal">
-  <div style="position:relative;width:100%;max-width:360px">
-    <video id="cam-video" playsinline muted></video>
-    <div style="position:absolute;top:38%;left:8%;right:8%;height:24%;border:2.5px solid #4ade80;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,0.5)"></div>
-  </div>
-  <p id="cam-status" style="color:#fff;font-size:14px;margin-top:16px;text-align:center">Barcode ko frame ke beech mein rakhein</p>
-  <button class="ghost" style="width:auto;margin-top:12px;color:#fff;border-color:#fff" onclick="closeScanner()">Cancel</button>
 </div>
 
 <header>
@@ -313,14 +321,14 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
   </div>
 
   <div id="more-settings" style="display:none">
-    <div class="card">
+    <div class="card" id="admin-cloud-card">
       <h3>Google Drive Sync (Cloud Backup)</h3>
       <div class="rowbtns">
         <button onclick="cloudExport()">Export to Cloud</button>
         <button class="sec" onclick="cloudImport()">Import from Cloud</button>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="admin-stocklimits-card">
       <h3>Stock Alert Limits Setup</h3>
       <label>Minimum Stock Alert Limit</label><input id="set-min-stock" type="number" value="3">
       <label>Maximum Stock Limit</label><input id="set-max-stock" type="number" value="100">
@@ -334,7 +342,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
         <button class="swatch" style="background:#ea580c;color:#fff" onclick="setTheme('warm')">Warm Elegant</button>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="admin-business-card">
       <h3>Business Details</h3>
       <label>Business Name*</label><input id="set-name">
       <label>Address</label><input id="set-address">
@@ -342,7 +350,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
       <label>GSTIN</label><input id="set-gstin">
       <button onclick="saveSettings()">Save Settings</button>
     </div>
-    <div class="card">
+    <div class="card" id="admin-backup-card">
       <h3>Data Backup & Restore</h3>
       <div class="rowbtns">
         <button class="sec" onclick="exportData()">Export Backup</button>
@@ -374,17 +382,29 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 </nav>
 
 <script>
-// Google Drive Web App URL
 var webAppUrl = "https://script.google.com/macros/s/AKfycbwuc4sKEjnALn5ISSYltviHQtN5savjJU5il7zcO3TN6lmoi2Vc7M8Wij9vd2HYX7-A/exec";
 
-// Cloud Export Function
-function cloudExport() {
-  if(bills.length === 0) {
-    alert("Export karne ke liye koi bill nahi hai!");
-    return;
+// Subscription Check on Load
+let subData = load('subscription', { expiry: new Date(Date.now() + 365*24*60*60*1000).toISOString() });
+function checkSubscription() {
+  if(new Date() > new Date(subData.expiry)) {
+    document.getElementById('sub-screen').style.display='flex';
+  } else {
+    document.getElementById('sub-screen').style.display='none';
   }
-  let lastBill = bills[bills.length - 1];
-  
+}
+function selectPlan(months) {
+  let exp = new Date();
+  exp.setMonth(exp.getMonth() + months);
+  subData.expiry = exp.toISOString();
+  save('subscription', subData);
+  checkSubscription();
+  alert(months + ' Months ka plan activate ho gaya!');
+}
+
+// Auto Cloud Export in background
+function cloudExportSilently(lastBill) {
+  if(!lastBill) return;
   var data = {
     action: "export",
     billNo: lastBill.bNo || "1",
@@ -393,23 +413,25 @@ function cloudExport() {
     totalAmount: lastBill.total || 0,
     date: lastBill.date || new Date().toLocaleString()
   };
-
   fetch(webAppUrl, {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(data)
-  }).then(() => {
-    alert("Data successfully Google Sheet par Export ho gaya!");
-  }).catch(err => alert("Error: " + err));
+  }).catch(err => console.log("Sync error:", err));
 }
 
-// Cloud Import Function
+function cloudExport() {
+  if(bills.length === 0) { alert("Export karne ke liye koi bill nahi hai!"); return; }
+  let lastBill = bills[bills.length - 1];
+  cloudExportSilently(lastBill);
+  alert("Data successfully Google Sheet par Export ho gaya!");
+}
+
 function cloudImport() {
   fetch(webAppUrl)
     .then(response => response.json())
     .then(data => {
-      console.log("Cloud Data:", data);
       if(data && data.length > 0) {
         bills = data.map(function(row) {
           return {
@@ -417,31 +439,18 @@ function cloudImport() {
             customer: row.customer || row.customerName || "Customer",
             items: row.items && Array.isArray(row.items) ? row.items : [{
               name: row.name || row.itemName || "Item",
-              size: row.size || "",
-              style: row.style || "",
-              shade: row.shade || "",
-              qty: row.qty || 1,
-              price: row.price || 0
+              size: row.size || "", style: row.style || "", shade: row.shade || "", qty: row.qty || 1, price: row.price || 0
             }],
             total: row.total || row.totalAmount || 0,
             date: row.date || new Date().toLocaleString()
           };
         });
-        
         save('bills', bills);
-        if(typeof renderBills === 'function') renderBills();
-        if(typeof renderDash === 'function') renderDash();
-        
+        renderBills(); renderDash();
         alert("Google Sheet se " + bills.length + " bills successfully Import ho gaye!");
-        if(typeof showTab === 'function') showTab('bills');
-      } else {
-        alert("Sheet par koi data nahi mila!");
-      }
+      } else { alert("Sheet par koi data nahi mila!"); }
     })
-    .catch(err => {
-      console.error("Import Error:", err);
-      alert("Import error: " + err.message);
-    });
+    .catch(err => alert("Import error: " + err.message));
 }
 
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -476,32 +485,35 @@ function showConfirm(msg,onYes){
   document.getElementById('modal-yes-btn').onclick=function(){closeModalGeneric();onYes();};
 }
 
-let scannerStream=null,scannerCallback=null,scannerInterval=null;
+// Fixed Scanner using File Input (No Camera Black Screen issue)
 const BARCODE_FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','codabar','itf'];
 function openScanner(cb){
-  scannerCallback=cb;
-  if(!('BarcodeDetector' in window)){showAlert('Camera barcode scanning supported nahi hai.');return;}
-  document.getElementById('cam-modal').style.display='flex';
-  document.getElementById('cam-status').textContent='Barcode ko frame mein rakhein...';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
-    scannerStream=stream;
-    const video=document.getElementById('cam-video');
-    video.srcObject=stream;video.play();
-    let detector=new BarcodeDetector({formats:BARCODE_FORMATS});
-    scannerInterval=setInterval(function(){
-      if(video.readyState<2)return;
-      detector.detect(video).then(function(codes){
-        if(codes.length>0){const val=codes[0].rawValue;closeScanner();if(scannerCallback)scannerCallback(val);}
-      }).catch(function(){});
-    },120);
-  }).catch(function(){showAlert('Camera permission nahi mili.');closeScanner();});
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = function(e) {
+    let file = e.target.files[0];
+    if(!file) return;
+    if('BarcodeDetector' in window) {
+      let img = document.createElement('img');
+      let reader = new FileReader();
+      reader.onload = function(evt) {
+        img.src = evt.target.result;
+        img.onload = function() {
+          let detector = new BarcodeDetector({formats: BARCODE_FORMATS});
+          detector.detect(img).then(function(codes){
+            if(codes.length > 0) { cb(codes[0].rawValue); }
+            else { showAlert('Barcode detect nahi hua, dobara try karein.'); }
+          }).catch(() => showAlert('Scan error.'));
+        }
+      };
+      reader.readAsDataURL(file);
+    } else { showAlert('BarcodeDetector supported nahi hai.'); }
+  };
+  input.click();
 }
-function closeScanner(){
-  document.getElementById('cam-modal').style.display='none';
-  if(scannerInterval)clearInterval(scannerInterval);
-  if(scannerStream)scannerStream.getTracks().forEach(function(t){t.stop()});
-  scannerStream=null;scannerInterval=null;
-}
+function closeScanner(){}
 
 function applyTheme(name){document.documentElement.setAttribute('data-theme',name)}
 function setTheme(name){theme=name;save('theme',name);applyTheme(name)}
@@ -513,10 +525,7 @@ function checkStockAlerts(){
 
 function openStockAlertModal(){
   const lowItems=items.filter(function(i){return (i.stock||0)<=stockLimits.min});
-  if(!lowItems.length){
-    showAlert('Sabhi items ka stock safe limit mein hai!');
-    return;
-  }
+  if(!lowItems.length){ showAlert('Sabhi items ka stock safe limit mein hai!'); return; }
   let html='<div style="max-height:40vh;overflow:auto;text-align:left">';
   lowItems.forEach(function(i){
     html+='<div class="row"><span><b>'+i.name+'</b></span><span class="stockbadge low">'+i.stock+' in stock</span></div>';
@@ -532,11 +541,9 @@ function doLogin(){
   const u=document.getElementById('lg-user').value.trim();
   const p=document.getElementById('lg-pass').value;
   if(u===logins.adminU && p===logins.adminP){
-    currentRole='admin';
-    initAppSession();
+    currentRole='admin'; initAppSession();
   }else if(u===logins.staffU && p===logins.staffP){
-    currentRole='staff';
-    initAppSession();
+    currentRole='staff'; initAppSession();
   }else{
     document.getElementById('lg-error').style.display='block';
   }
@@ -546,10 +553,18 @@ function initAppSession(){
   if(currentRole==='staff'){
     document.getElementById('nav-items-btn').style.display='none';
     document.getElementById('b-price').readOnly=true;
+    document.getElementById('admin-cloud-card').style.display='none';
+    document.getElementById('admin-stocklimits-card').style.display='none';
+    document.getElementById('admin-business-card').style.display='none';
+    document.getElementById('admin-backup-card').style.display='none';
     document.getElementById('admin-only-cred').style.display='none';
   }else{
     document.getElementById('nav-items-btn').style.display='flex';
     document.getElementById('b-price').readOnly=false;
+    document.getElementById('admin-cloud-card').style.display='block';
+    document.getElementById('admin-stocklimits-card').style.display='block';
+    document.getElementById('admin-business-card').style.display='block';
+    document.getElementById('admin-backup-card').style.display='block';
     document.getElementById('admin-only-cred').style.display='block';
   }
   applySettings();
@@ -570,7 +585,6 @@ function updateLogins(){
   const su=document.getElementById('set-staff-u').value.trim();
   const sp=document.getElementById('set-staff-p').value;
   if(!su||!sp){showAlert('Staff username aur password zaroori hai');return;}
-  
   if(currentRole==='admin'){
     const au=document.getElementById('set-admin-u').value.trim();
     const ap=document.getElementById('set-admin-p').value;
@@ -657,17 +671,7 @@ function importExcelFile(e){
         const cols=row.map(function(c){return c!==undefined && c!==null?String(c).trim():'';});
         if(i===0 && (cols[0].toLowerCase().includes('name')||cols[0].toLowerCase().includes('item')))continue;
         if(cols.length>=1 && cols[0]!==''){
-          const name=cols[0];
-          const size=cols[1]||'';
-          const style=cols[2]||'';
-          const shade=cols[3]||'';
-          let mrp=parseFloat(cols[4])||0;
-          let rate=parseFloat(cols[5])||mrp;
-          let gst=parseFloat(cols[6])||0;
-          let stock=parseFloat(cols[7])||0;
-          let barcode=cols[8]||'';
-
-          items.push({id:Date.now()+Math.random()+i,name,size,style,shade,mrp,rate,gst,stock,barcode});
+          items.push({id:Date.now()+Math.random()+i,name:cols[0],size:cols[1]||'',style:cols[2]||'',shade:cols[3]||'',mrp:parseFloat(cols[4])||0,rate:parseFloat(cols[5])||parseFloat(cols[4])||0,gst:parseFloat(cols[6])||0,stock:parseFloat(cols[7])||0,barcode:cols[8]||''});
           addedCount++;
         }
       }
@@ -679,8 +683,9 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
+// Fixed Export CSV using Blob (Prevents app crash)
 function exportExcel(type){
-  let csvContent='data:text/csv;charset=utf-8,';
+  let csvContent='';
   let filename='report.csv';
   if(type==='sales'){
     csvContent+='Bill No,Date,Customer,Payment Mode,Total\n';
@@ -698,8 +703,9 @@ function exportExcel(type){
     items.forEach(function(i){csvContent+=[`"${i.name}"`,`"${i.size}"`,`"${i.style}"`,`"${i.shade}"`,i.mrp,i.rate,i.stock,`"${i.barcode}"`].join(',')+'\n';});
     filename='stock_report.csv';
   }
-  const encodedUri=encodeURI(csvContent);
-  const link=document.createElement('a');link.setAttribute('href',encodedUri);link.setAttribute('download',filename);
+  const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');link.href=url;link.download=filename;
   document.body.appendChild(link);link.click();document.body.removeChild(link);
 }
 
@@ -913,6 +919,7 @@ function generateBill(){
       adjustStock(bills[idx].items,1);adjustStock(cart,-1);save('items',items);
       bills[idx]=Object.assign({},bills[idx],{customer:cname,customerPhone:cphone,payMode,cashAmt,upiAmt,cardAmt,items:cart.slice(),subtotal,gst:gstAmt,discount,total,status:'paid'});
       save('bills',bills);
+      cloudExportSilently(bills[idx]); // Auto sync to cloud
       renderBills();renderDash();checkStockAlerts();
       showAlert('Bill update ho gaya!');
     }
@@ -925,6 +932,7 @@ function generateBill(){
   bills.push(bill);
   save('bills',bills);
   
+  cloudExportSilently(bill); // Auto sync to cloud instantly
   renderBills();renderDash();checkStockAlerts();
   printReceipt(bill);
   
@@ -1018,19 +1026,10 @@ function renderReport(){
     let includeBill=false;
     let amtForReport=0;
 
-    if(pMode==='All'){
-      includeBill=true;
-      amtForReport=b.total;
-    }else if(pMode==='Cash' && bCash>0){
-      includeBill=true;
-      amtForReport=bCash;
-    }else if(pMode==='UPI' && bUpi>0){
-      includeBill=true;
-      amtForReport=bUpi;
-    }else if(pMode==='Card' && bCard>0){
-      includeBill=true;
-      amtForReport=bCard;
-    }
+    if(pMode==='All'){ includeBill=true; amtForReport=b.total; }
+    else if(pMode==='Cash' && bCash>0){ includeBill=true; amtForReport=bCash; }
+    else if(pMode==='UPI' && bUpi>0){ includeBill=true; amtForReport=bUpi; }
+    else if(pMode==='Card' && bCard>0){ includeBill=true; amtForReport=bCard; }
 
     if(includeBill){
       matchedBills.push({bNo:b.bNo, customer:b.customer, mode:b.payMode||'Cash', reportAmt:amtForReport, fullTotal:b.total, date:b.date});
@@ -1063,6 +1062,7 @@ function renderStock(){
 }
 
 document.addEventListener('DOMContentLoaded', function(){
+  checkSubscription();
   const saveBtn = document.getElementById('b-savebtn');
   if(saveBtn){
     saveBtn.addEventListener('click', function(e){
