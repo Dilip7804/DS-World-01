@@ -420,8 +420,10 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
+let isSyncing = false;
 function cloudExportSilently(lastBill) {
-  if(!lastBill) return;
+  if(!lastBill || isSyncing) return;
+  isSyncing = true;
   var data = {
     action: "export",
     billNo: lastBill.bNo || "1",
@@ -435,7 +437,12 @@ function cloudExportSilently(lastBill) {
     mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(data)
-  }).catch(err => console.log("Sync error:", err));
+  }).then(() => {
+    isSyncing = false;
+  }).catch(err => {
+    isSyncing = false;
+    console.log("Sync error:", err);
+  });
 }
 
 function cloudExport() {
@@ -645,7 +652,6 @@ function saveSettings(){
   showAlert('Settings save ho gayi');
 }
 
-// Reliable Backup Export function compatible with mobile / PWA browsers
 function exportData(){
   const data={items,bills,settings,logins,stockLimits,theme};
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
@@ -705,7 +711,6 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
-// Reliable CSV download for Mobile / PWA
 function exportExcel(type){
   let csvContent='';
   let filename='report.csv';
