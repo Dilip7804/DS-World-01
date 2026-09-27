@@ -419,43 +419,27 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
-// Reliable POST fetch sync for Google Sheet
+// Cloud Export via GET request to avoid CORS issues
 function cloudExportSilently(lastBill) {
   if(!lastBill) return;
   var itemsStr = (lastBill.items || []).map(function(i) {
     return i.name + (i.size ? " ["+i.size+"]" : "") + " (" + i.qty + " x " + i.price + ")";
   }).join("; ");
 
-  var payload = JSON.stringify({
-    action: "export",
-    billNo: lastBill.bNo || "1",
-    customerName: lastBill.customer || "Customer",
-    totalAmount: lastBill.total || 0,
-    date: lastBill.date || new Date().toLocaleString(),
-    itemsStr: itemsStr
-  });
+  var url = webAppUrl + "?action=export&billNo=" + encodeURIComponent(lastBill.bNo || "1") +
+            "&customerName=" + encodeURIComponent(lastBill.customer || "Customer") +
+            "&totalAmount=" + encodeURIComponent(lastBill.total || 0) +
+            "&date=" + encodeURIComponent(lastBill.date || new Date().toLocaleString()) +
+            "&itemsStr=" + encodeURIComponent(itemsStr);
 
-  fetch(webAppUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: payload
-  }).catch(err => console.log("Sync error:", err));
+  fetch(url).catch(err => console.log("Sync error:", err));
 }
 
+// Cloud Delete via GET request to avoid CORS issues
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  var payload = JSON.stringify({
-    action: "delete",
-    billNo: bNo
-  });
-
-  fetch(webAppUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: payload
-  }).catch(err => console.log("Delete sync error:", err));
+  var url = webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo);
+  fetch(url).catch(err => console.log("Delete sync error:", err));
 }
 
 function cloudImport() {
@@ -973,15 +957,12 @@ function generateBill(){
 
   adjustStock(cart,-1);save('items',items);
   
-  // Robust Invoice Numbering logic
+  // Professional Invoice Numbering: Agar aakhri bill delete hua hai toh wahi number reuse hoga
   let nextSeq = 1;
   if(bills.length > 0) {
-    let numbers = bills.map(b => {
-      let n = parseInt(String(b.bNo).replace(/\D/g, ''));
-      return isNaN(n) ? 0 : n;
-    });
-    let maxNum = Math.max(...numbers);
-    nextSeq = maxNum + 1;
+    let lastBNo = bills[bills.length - 1].bNo;
+    let num = parseInt(lastBNo.replace(/\D/g, '')) || bills.length;
+    nextSeq = num + 1;
   }
   const bNo = 'INV-' + String(nextSeq).padStart(4, '0');
 
