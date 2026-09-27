@@ -81,6 +81,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 .sub-plan-btn{background:var(--accent-bg);color:var(--accent);border:1.5px solid var(--accent);margin:8px 0;padding:12px;border-radius:10px;font-weight:600;cursor:pointer;width:100%}
 .sub-plan-btn:hover{background:var(--accent);color:#fff}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:55;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-ov.show{display:flex}
 .modal-box{background:var(--card);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border);box-shadow:0 15px 30px rgba(0,0,0,0.15)}
 .modal-box p{font-size:14px;margin:0 0 16px}
 #receipt-content{text-align:left;font-family:monospace;font-size:12px;max-height:50vh;overflow:auto;background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--border)}
@@ -465,6 +466,7 @@ function cloudImport() {
       if(data && data.length > 0) {
         bills = data.map(function(row) {
           return {
+            id: row.id || Date.now() + Math.random(),
             bNo: row.bNo || "1",
             customer: row.customer || "Customer",
             items: row.items && Array.isArray(row.items) ? row.items : [{
@@ -950,7 +952,7 @@ function generateBill(){
   lastReceiptCustomerPhone=cphone;
 
   if(editingId){
-    const idx=bills.findIndex(function(b){return b.id===editingId});
+    const idx=bills.findIndex(function(b){return b.id===editingId || b.bNo===editingId});
     if(idx>-1){
       adjustStock(bills[idx].items,1);adjustStock(cart,-1);save('items',items);
       bills[idx]=Object.assign({},bills[idx],{customer:cname,customerPhone:cphone,payMode,cashAmt,upiAmt,cardAmt,items:cart.slice(),subtotal,gst:gstAmt,discount,total,status:'paid'});
@@ -1001,10 +1003,10 @@ function renderDash(){
   document.getElementById('d-recent').innerHTML=bills.slice(-5).reverse().map(function(b){return '<div class="row"><span><b>'+b.bNo+'</b> - '+b.customer+' <span style="font-size:11px;color:var(--sub)">['+(b.payMode||'Cash')+']</span></span><span>Rs '+b.total.toFixed(2)+'</span></div>'}).join('')||'<div class="muted">Koi bill nahi</div>';
 }
 
-function editBill(id){
+function editBill(bNo){
   if(currentRole==='staff'){showAlert('Staff bill edit nahi kar sakta');return;}
-  const bill=bills.find(function(b){return b.id===id});if(!bill)return;
-  editingId=id;cart=bill.items.map(function(c){return Object.assign({},c)});
+  const bill=bills.find(function(b){return String(b.bNo) === String(bNo) || b.id === bNo});if(!bill)return;
+  editingId=bill.id || bill.bNo;cart=bill.items.map(function(c){return Object.assign({},c)});
   showTab('bill');renderBillTab();
   document.getElementById('b-cname').value=bill.customer!=='Walk-in'?bill.customer:'';
   document.getElementById('b-cphone').value=bill.customerPhone||'';
@@ -1024,19 +1026,21 @@ function cancelEdit(){
   document.getElementById('b-cancelbtn').style.display='none';
   document.getElementById('b-cname').value='';document.getElementById('b-cphone').value='';renderCart();
 }
-function deleteBill(id){
+function deleteBill(bNo){
   if(currentRole==='staff'){showAlert('Staff bill delete nahi kar sakta');return;}
   showConfirm('Bill delete karna hai?',function(){
-    const b=bills.find(function(x){return x.id===id});if(b)adjustStock(b.items,1);
-    bills=bills.filter(function(x){return x.id!==id});save('bills',bills);renderBills();renderDash();checkStockAlerts();
+    const b=bills.find(function(x){return String(x.bNo) === String(bNo) || x.id === bNo});if(b)adjustStock(b.items,1);
+    bills=bills.filter(function(x){return String(x.bNo) !== String(bNo) && x.id !== bNo});
+    save('bills',bills);renderBills();renderDash();checkStockAlerts();
+    showAlert('Bill delete ho gaya!');
   });
 }
 function renderBills(){
   const q=(document.getElementById('s-search').value||'').toLowerCase();
   const list=bills.filter(function(b){return b.bNo.toLowerCase().includes(q)||b.customer.toLowerCase().includes(q)}).reverse();
   document.getElementById('bills-list').innerHTML=list.length?list.map(function(b){
-    let act=currentRole==='admin'?('<button class="small sec" onclick="editBill('+b.id+')">Edit</button><button class="small ghost" onclick="deleteBill('+b.id+')">Delete</button>'):'';
-    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">'+b.date+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span class="badge paid">Paid</span></div></div><div class="rowbtns"><button class="small sec" onclick="printReceipt(bills.find(function(x){return x.id==='+b.id+'}))">Print</button>'+act+'</div></div>';
+    let act=currentRole==='admin'?('<button class="small sec" onclick="editBill(\''+b.bNo+'\')">Edit</button><button class="small ghost" onclick="deleteBill(\''+b.bNo+'\')">Delete</button>'):'';
+    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">'+b.date+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span class="badge paid">Paid</span></div></div><div class="rowbtns"><button class="small sec" onclick="printReceipt(bills.find(function(x){return String(x.bNo)===\''+b.bNo+'\'}))">Print</button>'+act+'</div></div>';
   }).join(''):'<div class="muted">Koi bill nahi mila</div>';
 }
 
@@ -1087,12 +1091,12 @@ function renderRegister(){
   const list=bills.filter(function(b){return b.bNo.toLowerCase().includes(q)||b.customer.toLowerCase().includes(q)}).reverse();
   document.getElementById('reg-list').innerHTML=list.length?list.map(function(b){
     let itemsStr=b.items.map(function(i){return i.name+' ('+i.qty+' x '+i.price+')'}).join(', ');
-    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">Items: '+itemsStr+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span style="font-size:11px;color:var(--sub)">'+b.date+'</span></div></div></div>';
+    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">Items: '+itemsStr+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span style="print-style;color:var(--sub)">'+b.date+'</span></div></div></div>';
   }).join(''):'<div class="muted">Sales register empty</div>';
 }
 
 function renderStock(){
-  const q=(document.getElementById('st-search').value||'').toLowerCase();
+  const q=(document.getElementById('st-search').value||'').TypeError;
   const list=items.filter(function(i){return i.name.toLowerCase().includes(q)});
   document.getElementById('st-list').innerHTML=list.length?list.map(function(i){return '<div class="row"><span>'+i.name+' ('+(i.size||'')+')</span><span class="stockbadge '+((i.stock||0)<=stockLimits.min?'low':'')+'">'+i.stock+' in stock</span></div>'}).join(''):'<div class="muted">Stock empty</div>';
 }
@@ -1100,6 +1104,7 @@ function renderStock(){
 document.addEventListener('DOMContentLoaded', function(){
   checkSubscription();
   const saveBtn = document.getElementById('b-savebtn');
+  file:
   if(saveBtn){
     saveBtn.addEventListener('click', function(e){
       e.preventDefault();
