@@ -76,7 +76,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
 .loginbox{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:30px 24px;box-shadow:0 10px 25px rgba(0,0,0,0.08);text-align:center;border:1px solid var(--border)}
 .loginbox .logo{width:60px;height:60px;font-size:26px;margin:0 auto 16px;border-radius:16px}
-#sub-screen{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+#sub-screen{position:fixed;inset:0;background:var(--bg);z-index:70;display:none;align-items:center;justify-content:center;padding:20px}
 .subbox{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:24px;box-shadow:0 15px 35px rgba(0,0,0,0.12);text-align:center;border:1px solid var(--border)}
 .sub-plan-btn{background:var(--accent-bg);color:var(--accent);border:1.5px solid var(--accent);margin:8px 0;padding:12px;border-radius:10px;font-weight:600;cursor:pointer;width:100%}
 .sub-plan-btn:hover{background:var(--accent);color:#fff}
@@ -106,7 +106,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
       <button class="sub-plan-btn" onclick="selectPlan(12)">1 Year (12 Months) Plan</button>
     </div>
     <div style="background:var(--bg);padding:12px;border-radius:10px;font-size:13px;border:1px solid var(--border)">
-      Payment ke liye sampark karein:<br><b>Phone: 7991505762</b> (Dilip Singh)
+      Payment ke baad activation ke liye sampark karein:<br><b>Phone: 6387992674</b> (DS WORLD)
     </div>
   </div>
 </div>
@@ -152,6 +152,9 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 <div class="wrap">
 
 <div id="tab-dash" class="tab on">
+  <div class="card" style="text-align:center;padding:10px;background:var(--accent-bg);color:var(--accent);font-weight:600;font-size:13px;border-radius:12px;margin-bottom:12px">
+    📅 Live Date & Time: <span id="live-datetime"></span>
+  </div>
   <div style="display:flex;flex-direction:column;gap:12px">
     <div class="vip-card c1">
       <div class="lbl">Total Sales (Today)</div>
@@ -269,7 +272,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
     <button class="on" onclick="showMore('sales',this)">Sales Report</button>
     <button onclick="showMore('register',this)">Sales Register</button>
     <button onclick="showMore('stock',this)">Stock Report</button>
-    <button onclick="showMore('settings',this)">Settings</button>
+    <button onclick="showMore('settings',this)">Settings & Info</button>
   </div>
 
   <div id="more-sales">
@@ -368,6 +371,16 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
       <label>Staff Password</label><input id="set-staff-p" type="password">
       <button class="sec" onclick="updateLogins()">Update Credentials</button>
     </div>
+    <div class="card">
+      <h3>Terms, Conditions & Help</h3>
+      <p style="font-size:13px;color:var(--sub);margin:0;line-height:1.5">
+        <b>DS WORLD Billing System</b> ek advanced PWA billing solution hai. Kisi bhi samasya ya renewal ke liye developer <b>DS WORLD</b> se sampark karein.<br>Phone: <b>6387992674</b>
+      </p>
+    </div>
+    <div class="card" style="text-align:center;background:var(--accent-bg)">
+      <h3 style="color:var(--accent);margin:0">Developed by DS WORLD</h3>
+      <p style="font-size:12px;color:var(--sub);margin:4px 0 0">All Rights Reserved © 2026</p>
+    </div>
   </div>
 </div>
 
@@ -384,7 +397,6 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 <script>
 var webAppUrl = "https://script.google.com/macros/s/AKfycbwuc4sKEjnALn5ISSYltviHQtN5savjJU5il7zcO3TN6lmoi2Vc7M8Wij9vd2HYX7-A/exec";
 
-// Subscription Check on Load
 let subData = load('subscription', { expiry: new Date(Date.now() + 365*24*60*60*1000).toISOString() });
 function checkSubscription() {
   if(new Date() > new Date(subData.expiry)) {
@@ -402,7 +414,12 @@ function selectPlan(months) {
   alert(months + ' Months ka plan activate ho gaya!');
 }
 
-// Auto Cloud Export in background
+setInterval(function(){
+  const now = new Date();
+  const el = document.getElementById('live-datetime');
+  if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
+}, 1000);
+
 function cloudExportSilently(lastBill) {
   if(!lastBill) return;
   var data = {
@@ -485,7 +502,6 @@ function showConfirm(msg,onYes){
   document.getElementById('modal-yes-btn').onclick=function(){closeModalGeneric();onYes();};
 }
 
-// Fixed Scanner using File Input (No Camera Black Screen issue)
 const BARCODE_FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','codabar','itf'];
 function openScanner(cb){
   let input = document.createElement('input');
@@ -683,7 +699,6 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
-// Fixed Export CSV using Blob (Prevents app crash)
 function exportExcel(type){
   let csvContent='';
   let filename='report.csv';
@@ -706,7 +721,8 @@ function exportExcel(type){
   const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const link=document.createElement('a');link.href=url;link.download=filename;
-  document.body.appendChild(link);link.click();document.body.removeChild(link);
+  document.body.appendChild(link);link.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},1000);
 }
 
 function showTab(name,btn){
@@ -919,7 +935,7 @@ function generateBill(){
       adjustStock(bills[idx].items,1);adjustStock(cart,-1);save('items',items);
       bills[idx]=Object.assign({},bills[idx],{customer:cname,customerPhone:cphone,payMode,cashAmt,upiAmt,cardAmt,items:cart.slice(),subtotal,gst:gstAmt,discount,total,status:'paid'});
       save('bills',bills);
-      cloudExportSilently(bills[idx]); // Auto sync to cloud
+      cloudExportSilently(bills[idx]);
       renderBills();renderDash();checkStockAlerts();
       showAlert('Bill update ho gaya!');
     }
@@ -932,7 +948,7 @@ function generateBill(){
   bills.push(bill);
   save('bills',bills);
   
-  cloudExportSilently(bill); // Auto sync to cloud instantly
+  cloudExportSilently(bill);
   renderBills();renderDash();checkStockAlerts();
   printReceipt(bill);
   
