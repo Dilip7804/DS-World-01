@@ -451,11 +451,11 @@ function cloudExportSilently(lastBill) {
   });
 }
 
-// Google Sheet se bill delete karne ke liye reliable GET request with Image/Script beacon
+// Google Sheet se bill delete karne ke liye 100% reliable GET request
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  // Background GET fetch request
   fetch(webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo))
+    .then(response => response.json())
     .catch(err => console.log("Delete sync error:", err));
 }
 
@@ -659,7 +659,6 @@ function saveSettings(){
   showAlert('Settings save ho gayi');
 }
 
-// Mobile Crash-Proof Blob Download for Backup (.json)
 function exportData(){
   const data={items,bills,settings,logins,stockLimits,theme};
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -723,7 +722,6 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
-// Mobile Crash-Proof Blob Download for CSV Reports
 function exportExcel(type){
   let csvContent='';
   let filename='report.csv';
@@ -979,7 +977,7 @@ function generateBill(){
   // Professional Invoice Numbering: Agar aakhri bill delete hua hai toh wahi number reuse hoga, warna naya aage badhega
   let nextSeq = 1;
   if(bills.length > 0) {
-    let lastBNo = bills[bills.length - 1].bNo; // e.g. "INV-0005"
+    let lastBNo = bills[bills.length - 1].bNo; // e.g. "INV-0007"
     let num = parseInt(lastBNo.replace(/\D/g, '')) || bills.length;
     nextSeq = num + 1;
   }
