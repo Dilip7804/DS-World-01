@@ -327,8 +327,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
     <div class="card" id="admin-cloud-card">
       <h3>Google Drive Sync (Cloud Backup)</h3>
       <div class="rowbtns">
-        <button onclick="cloudExport()">Sync Latest Bill</button>
-        <button class="sec" onclick="cloudImport()">Import from Cloud</button>
+        <button class="sec" onclick="cloudImport()" style="width:100%">Import from Cloud</button>
       </div>
     </div>
     <div class="card" id="admin-stocklimits-card">
@@ -421,9 +420,14 @@ setInterval(function(){
 }, 1000);
 
 let isSyncing = false;
+let lastAutoSyncedBillNo = "";
+
 function cloudExportSilently(lastBill) {
   if(!lastBill || isSyncing) return;
+  if(lastAutoSyncedBillNo === lastBill.bNo) return; // Dubara same bill auto-sync nahi hoga
+  
   isSyncing = true;
+  lastAutoSyncedBillNo = lastBill.bNo;
 
   var data = {
     action: "export",
@@ -445,13 +449,6 @@ function cloudExportSilently(lastBill) {
     isSyncing = false;
     console.log("Sync error:", err);
   });
-}
-
-function cloudExport() {
-  if(bills.length === 0) { alert("Export karne ke liye koi bill nahi hai!"); return; }
-  let lastBill = bills[bills.length - 1];
-  cloudExportSilently(lastBill);
-  alert("Latest bill successfully Google Sheet par Sync ho gaya!");
 }
 
 function cloudImport() {
@@ -992,7 +989,7 @@ function printReceipt(bill){
 }
 function doPrintNow(){window.print();}
 function shareOnWhatsApp(){
-  let phone=lastReceiptCustomerPhone?lastReceiptCustomerPhone.replace(/\D/g,''):'';
+  let phone=lastReceiptCustomerPhone?lastReceiptCustomerPhone.replace(/\D/g, ''):'';
   window.open('https://wa.me/'+(phone.length>=10?'91'+phone.slice(-10):'')+'?text='+encodeURIComponent(lastReceiptText),'_blank');
 }
 
