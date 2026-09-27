@@ -451,12 +451,19 @@ function cloudExportSilently(lastBill) {
   });
 }
 
-// Google Sheet se bill delete karne ke liye GET request method
+// Google Sheet se bill delete karne ke liye POST request method (no-cors)
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  fetch(webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo))
-    .then(response => response.json())
-    .catch(err => console.log("Delete sync error:", err));
+  var data = {
+    action: "delete",
+    billNo: bNo
+  };
+  fetch(webAppUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(data)
+  }).catch(err => console.log("Delete sync error:", err));
 }
 
 function cloudImport() {
@@ -488,6 +495,7 @@ function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let items=load('items',[]);
 let bills=load('bills',[]);
+let billSeq = load('billSeq', 0); // Permanent counter taaki bill number repeat na ho
 let settings=load('settings',{name:'DS WORLD',address:'',phone:'',gstin:''});
 let stockLimits=load('stockLimits',{min:3,max:100});
 let logins=load('logins',{adminU:'admin',adminP:'1234',staffU:'staff',staffP:'1234'});
@@ -661,7 +669,7 @@ function saveSettings(){
 
 // Mobile Crash-Proof Blob Download for Backup (.json)
 function exportData(){
-  const data={items,bills,settings,logins,stockLimits,theme};
+  const data={items,bills,settings,logins,stockLimits,theme,billSeq};
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -687,6 +695,7 @@ function importData(e){
       if(d.logins)logins=d.logins;
       if(d.stockLimits)stockLimits=d.stockLimits;
       if(d.theme)theme=d.theme;
+      if(d.billSeq!==undefined){billSeq=d.billSeq;save('billSeq',billSeq);}
       save('items',items);save('bills',bills);save('settings',settings);save('logins',logins);save('stockLimits',stockLimits);save('theme',theme);
       showAlert('Backup restore ho gaya!');
       applySettings();applyTheme(theme);renderDash();renderBills();checkStockAlerts();
@@ -975,7 +984,12 @@ function generateBill(){
   }
 
   adjustStock(cart,-1);save('items',items);
-  const bNo='INV-'+String(bills.length+1).padStart(4,'0');
+  
+  // Hamesha naya unique sequence number badhayenge taaki bill number kabhi repeat na ho
+  billSeq = Math.max(billSeq + 1, bills.length + 1);
+  save('billSeq', billSeq);
+  const bNo='INV-'+String(billSeq).padStart(4,'0');
+
   const bill={id:Date.now(),bNo,date:new Date().toLocaleString('en-IN'),rawDate:new Date().toISOString().split('T')[0],customer:cname,customerPhone:cphone,payMode,cashAmt,upiAmt,cardAmt,items:cart.slice(),subtotal,gst:gstAmt,discount,total,status:'paid'};
   bills.push(bill);
   save('bills',bills);
@@ -1098,7 +1112,7 @@ function renderReport(){
   document.getElementById('r-breakdown').innerHTML='Cash:Rs '+cSum.toFixed(0)+'<br>UPI:Rs '+uSum.toFixed(0)+'<br>Card:Rs '+cdSum.toFixed(0);
 
   document.getElementById('r-list').innerHTML=matchedBills.length?matchedBills.slice().reverse().map(function(m){
-    return '<div class="row"><span><b>'+m.bNo+'</b> - '+m.customer+' <span style="font-size:11px;color:var(--sub)">['+m.mode+']</span></span><span><b>Rs '+m.reportAmt.toFixed(2)+'</b>'+(m.reportAmt!==m.fullTotal?' <small style="color:var(--sub)">(Bill: '+m.fullTotal+')</small>':'')+'</span></div>';
+    return '<div class="row"><span><b>'+m.bNo+'</b> - '+m.customer+' <span style="font-size:11px;color:var(--sub)">['+m.mode+']</span></span><span><b>Rs '+m.reportTagWidth||m.reportAmt.toFixed(2)+'</b>'+(m.reportAmt!==m.fullTotal?' <small style="color:var(--sub)">(Bill: '+m.fullTotal+')</small>':'')+'</span></div>';
   }).join(''):'<div class="muted">Koi data nahi mila</div>';
 }
 
