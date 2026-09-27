@@ -81,7 +81,6 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 .sub-plan-btn{background:var(--accent-bg);color:var(--accent);border:1.5px solid var(--accent);margin:8px 0;padding:12px;border-radius:10px;font-weight:600;cursor:pointer;width:100%}
 .sub-plan-btn:hover{background:var(--accent);color:#fff}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:55;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-ov.show{display:flex}
 .modal-box{background:var(--card);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border);box-shadow:0 15px 30px rgba(0,0,0,0.15)}
 .modal-box p{font-size:14px;margin:0 0 16px}
 #receipt-content{text-align:left;font-family:monospace;font-size:12px;max-height:50vh;overflow:auto;background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--border)}
@@ -421,9 +420,15 @@ setInterval(function(){
 }, 1000);
 
 let isSyncing = false;
+let lastSyncedBillNo = "";
+
 function cloudExportSilently(lastBill) {
   if(!lastBill || isSyncing) return;
+  if(lastSyncedBillNo === lastBill.bNo) return;
+  
   isSyncing = true;
+  lastSyncedBillNo = lastBill.bNo;
+
   var data = {
     action: "export",
     billNo: lastBill.bNo || "1",
@@ -432,13 +437,14 @@ function cloudExportSilently(lastBill) {
     totalAmount: lastBill.total || 0,
     date: lastBill.date || new Date().toLocaleString()
   };
+  
   fetch(webAppUrl, {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(data)
   }).then(() => {
-    isSyncing = false;
+    setTimeout(function() { isSyncing = false; }, 5000);
   }).catch(err => {
     isSyncing = false;
     console.log("Sync error:", err);
@@ -453,7 +459,7 @@ function cloudExport() {
 }
 
 function cloudImport() {
-  fetch(webAppUrl, { method: "GET", redirect: "follow" })
+  fetch(webAppUrl)
     .then(response => response.json())
     .then(data => {
       if(data && data.length > 0) {
