@@ -419,16 +419,9 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
-let isSyncing = false;
-let lastAutoSyncedBillNo = "";
-
+// Cloud Export with reliable POST request
 function cloudExportSilently(lastBill) {
-  if(!lastBill || isSyncing) return;
-  if(lastAutoSyncedBillNo === lastBill.bNo) return;
-  
-  isSyncing = true;
-  lastAutoSyncedBillNo = lastBill.bNo;
-
+  if(!lastBill) return;
   var data = {
     action: "export",
     billNo: lastBill.bNo || "1",
@@ -443,20 +436,22 @@ function cloudExportSilently(lastBill) {
     mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(data)
-  }).then(() => {
-    setTimeout(function() { isSyncing = false; }, 3000);
-  }).catch(err => {
-    isSyncing = false;
-    console.log("Sync error:", err);
-  });
+  }).catch(err => console.log("Sync error:", err));
 }
 
-// Google Sheet se bill delete karne ke liye 100% reliable GET request
+// Cloud Delete with reliable POST request
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  fetch(webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo))
-    .then(response => response.json())
-    .catch(err => console.log("Delete sync error:", err));
+  var data = {
+    action: "delete",
+    billNo: bNo
+  };
+  fetch(webAppUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(data)
+  }).catch(err => console.log("Delete sync error:", err));
 }
 
 function cloudImport() {
@@ -974,10 +969,10 @@ function generateBill(){
 
   adjustStock(cart,-1);save('items',items);
   
-  // Professional Invoice Numbering: Agar aakhri bill delete hua hai toh wahi number reuse hoga, warna naya aage badhega
+  // Professional Invoice Numbering: Agar aakhri bill delete hua hai toh wahi number reuse hoga
   let nextSeq = 1;
   if(bills.length > 0) {
-    let lastBNo = bills[bills.length - 1].bNo; // e.g. "INV-0007"
+    let lastBNo = bills[bills.length - 1].bNo;
     let num = parseInt(lastBNo.replace(/\D/g, '')) || bills.length;
     nextSeq = num + 1;
   }
