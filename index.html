@@ -394,7 +394,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 </nav>
 
 <script>
-var webAppUrl = "https://script.google.com/macros/s/AKfycbwVjIRzekTxsQ22fekwS9-j_ogTkAKB_gBmCoN9YVZwt8xa73eDhKBsCvhRSZHL5-lj/exec";
+var webAppUrl = "https://script.google.com/macros/s/AKfycbwuc4sKEjnALn5ISSYltviHQtN5savjJU5il7zcO3TN6lmoi2Vc7M8Wij9vd2HYX7-A/exec";
 
 let subData = load('subscription', { expiry: new Date(Date.now() + 365*24*60*60*1000).toISOString() });
 function checkSubscription() {
@@ -419,27 +419,60 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
-// Cloud Export via GET request to avoid CORS issues
+// Hidden Form + Iframe submission to completely bypass CORS and Google redirects
+function sendViaForm(dataObj) {
+  let iframe = document.getElementById('sync-iframe');
+  if(!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.name = 'sync-iframe';
+    iframe.id = 'sync-iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+  
+  let form = document.getElementById('sync-form');
+  if(!form) {
+    form = document.createElement('form');
+    form.id = 'sync-form';
+    form.method = 'POST';
+    form.action = webAppUrl;
+    form.target = 'sync-iframe';
+    document.body.appendChild(form);
+  } else {
+    form.innerHTML = '';
+  }
+  
+  let input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'payload';
+  input.value = JSON.stringify(dataObj);
+  form.appendChild(input);
+  
+  form.submit();
+}
+
 function cloudExportSilently(lastBill) {
   if(!lastBill) return;
   var itemsStr = (lastBill.items || []).map(function(i) {
     return i.name + (i.size ? " ["+i.size+"]" : "") + " (" + i.qty + " x " + i.price + ")";
   }).join("; ");
 
-  var url = webAppUrl + "?action=export&billNo=" + encodeURIComponent(lastBill.bNo || "1") +
-            "&customerName=" + encodeURIComponent(lastBill.customer || "Customer") +
-            "&totalAmount=" + encodeURIComponent(lastBill.total || 0) +
-            "&date=" + encodeURIComponent(lastBill.date || new Date().toLocaleString()) +
-            "&itemsStr=" + encodeURIComponent(itemsStr);
-
-  fetch(url).catch(err => console.log("Sync error:", err));
+  sendViaForm({
+    action: "export",
+    billNo: lastBill.bNo || "1",
+    customerName: lastBill.customer || "Customer",
+    totalAmount: lastBill.total || 0,
+    date: lastBill.date || new Date().toLocaleString(),
+    itemsStr: itemsStr
+  });
 }
 
-// Cloud Delete via GET request to avoid CORS issues
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  var url = webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo);
-  fetch(url).catch(err => console.log("Delete sync error:", err));
+  sendViaForm({
+    action: "delete",
+    billNo: bNo
+  });
 }
 
 function cloudImport() {
@@ -957,12 +990,15 @@ function generateBill(){
 
   adjustStock(cart,-1);save('items',items);
   
-  // Professional Invoice Numbering: Agar aakhri bill delete hua hai toh wahi number reuse hoga
+  // Robust Invoice Numbering logic
   let nextSeq = 1;
   if(bills.length > 0) {
-    let lastBNo = bills[bills.length - 1].bNo;
-    let num = parseInt(lastBNo.replace(/\D/g, '')) || bills.length;
-    nextSeq = num + 1;
+    let numbers = bills.map(b => {
+      let n = parseInt(String(b.bNo).replace(/\D/g, ''));
+      return isNaN(n) ? 0 : n;
+    });
+    let maxNum = Math.max(...numbers);
+    nextSeq = maxNum + 1;
   }
   const bNo = 'INV-' + String(nextSeq).padStart(4, '0');
 
