@@ -451,19 +451,12 @@ function cloudExportSilently(lastBill) {
   });
 }
 
-// Google Sheet se bhi bill delete karne ke liye function
+// Google Sheet se bill delete karne ke liye GET request method
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  var data = {
-    action: "delete",
-    billNo: bNo
-  };
-  fetch(webAppUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(data)
-  }).catch(err => console.log("Delete sync error:", err));
+  fetch(webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo))
+    .then(response => response.json())
+    .catch(err => console.log("Delete sync error:", err));
 }
 
 function cloudImport() {
@@ -1050,7 +1043,6 @@ function deleteBill(bNo){
     const b=bills.find(function(x){return String(x.bNo) === String(bNo) || x.id === bNo});
     if(b) {
       adjustStock(b.items,1);
-      // Google Sheet se bhi delete request bhej do
       cloudDeleteBillSilently(b.bNo);
     }
     bills=bills.filter(function(x){return String(x.bNo) !== String(bNo) && x.id !== bNo});
