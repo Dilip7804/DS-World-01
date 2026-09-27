@@ -453,19 +453,18 @@ function cloudExport() {
 }
 
 function cloudImport() {
-  fetch(webAppUrl)
+  fetch(webAppUrl, { method: "GET", redirect: "follow" })
     .then(response => response.json())
     .then(data => {
       if(data && data.length > 0) {
         bills = data.map(function(row) {
           return {
-            bNo: row.bNo || row.billNo || "1",
-            customer: row.customer || row.customerName || "Customer",
+            bNo: row.bNo || "1",
+            customer: row.customer || "Customer",
             items: row.items && Array.isArray(row.items) ? row.items : [{
-              name: row.name || row.itemName || "Item",
-              size: row.size || "", style: row.style || "", shade: row.shade || "", qty: row.qty || 1, price: row.price || 0
+              name: "Item", size: "", style: "", shade: "", qty: 1, price: 0
             }],
-            total: row.total || row.totalAmount || 0,
+            total: row.total || 0,
             date: row.date || new Date().toLocaleString()
           };
         });
