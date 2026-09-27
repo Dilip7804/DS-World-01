@@ -645,12 +645,18 @@ function saveSettings(){
   showAlert('Settings save ho gayi');
 }
 
+// Reliable Backup Export function compatible with mobile / PWA browsers
 function exportData(){
   const data={items,bills,settings,logins,stockLimits,theme};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='backup.json';a.click();URL.revokeObjectURL(url);
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+  const a = document.createElement('a');
+  a.setAttribute("href", dataStr);
+  a.setAttribute("download", "ds_world_backup.json");
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { a.remove(); }, 500);
 }
+
 function importData(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
@@ -699,6 +705,7 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
+// Reliable CSV download for Mobile / PWA
 function exportExcel(type){
   let csvContent='';
   let filename='report.csv';
@@ -718,11 +725,14 @@ function exportExcel(type){
     items.forEach(function(i){csvContent+=[`"${i.name}"`,`"${i.size}"`,`"${i.style}"`,`"${i.shade}"`,i.mrp,i.rate,i.stock,`"${i.barcode}"`].join(',')+'\n';});
     filename='stock_report.csv';
   }
-  const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const link=document.createElement('a');link.href=url;link.download=filename;
-  document.body.appendChild(link);link.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},1000);
+  
+  const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => { link.remove(); }, 500);
 }
 
 function showTab(name,btn){
