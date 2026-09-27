@@ -327,7 +327,7 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
     <div class="card" id="admin-cloud-card">
       <h3>Google Drive Sync (Cloud Backup)</h3>
       <div class="rowbtns">
-        <button onclick="cloudExport()">Export to Cloud</button>
+        <button onclick="cloudExport()">Sync Latest Bill</button>
         <button class="sec" onclick="cloudImport()">Import from Cloud</button>
       </div>
     </div>
@@ -421,14 +421,9 @@ setInterval(function(){
 }, 1000);
 
 let isSyncing = false;
-let lastSyncedBillNo = "";
-
 function cloudExportSilently(lastBill) {
   if(!lastBill || isSyncing) return;
-  if(lastSyncedBillNo === lastBill.bNo) return;
-  
   isSyncing = true;
-  lastSyncedBillNo = lastBill.bNo;
 
   var data = {
     action: "export",
@@ -445,7 +440,7 @@ function cloudExportSilently(lastBill) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(data)
   }).then(() => {
-    setTimeout(function() { isSyncing = false; }, 5000);
+    setTimeout(function() { isSyncing = false; }, 3000);
   }).catch(err => {
     isSyncing = false;
     console.log("Sync error:", err);
@@ -456,7 +451,7 @@ function cloudExport() {
   if(bills.length === 0) { alert("Export karne ke liye koi bill nahi hai!"); return; }
   let lastBill = bills[bills.length - 1];
   cloudExportSilently(lastBill);
-  alert("Data successfully Google Sheet par Export ho gaya!");
+  alert("Latest bill successfully Google Sheet par Sync ho gaya!");
 }
 
 function cloudImport() {
@@ -659,15 +654,20 @@ function saveSettings(){
   showAlert('Settings save ho gayi');
 }
 
+// Mobile Crash-Proof Blob Download for Backup (.json)
 function exportData(){
   const data={items,bills,settings,logins,stockLimits,theme};
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.setAttribute("href", dataStr);
-  a.setAttribute("download", "ds_world_backup.json");
+  a.href = url;
+  a.download = "ds_world_backup.json";
   document.body.appendChild(a);
   a.click();
-  setTimeout(() => { a.remove(); }, 500);
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 500);
 }
 
 function importData(e){
@@ -718,6 +718,7 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
+// Mobile Crash-Proof Blob Download for CSV Reports
 function exportExcel(type){
   let csvContent='';
   let filename='report.csv';
@@ -738,13 +739,17 @@ function exportExcel(type){
     filename='stock_report.csv';
   }
   
-  const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
+  link.href = url;
   link.setAttribute('download', filename);
   document.body.appendChild(link);
   link.click();
-  setTimeout(() => { link.remove(); }, 500);
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 500);
 }
 
 function showTab(name,btn){
@@ -1091,12 +1096,12 @@ function renderRegister(){
   const list=bills.filter(function(b){return b.bNo.toLowerCase().includes(q)||b.customer.toLowerCase().includes(q)}).reverse();
   document.getElementById('reg-list').innerHTML=list.length?list.map(function(b){
     let itemsStr=b.items.map(function(i){return i.name+' ('+i.qty+' x '+i.price+')'}).join(', ');
-    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">Items: '+itemsStr+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span style="print-style;color:var(--sub)">'+b.date+'</span></div></div></div>';
+    return '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><div style="display:flex;justify-content:space-between"><div><b>'+b.bNo+'</b> - '+b.customer+(b.customerPhone?' ('+b.customerPhone+')':'')+' <span style="font-size:11px;color:var(--accent)">['+(b.payMode||'Cash')+']</span><div class="muted" style="padding:0;text-align:left">Items: '+itemsStr+'</div></div><div style="text-align:right"><b>Rs '+b.total.toFixed(2)+'</b><br><span style="font-size:11px;color:var(--sub)">'+b.date+'</span></div></div></div>';
   }).join(''):'<div class="muted">Sales register empty</div>';
 }
 
 function renderStock(){
-  const q=(document.getElementById('st-search').value||'').TypeError;
+  const q=(document.getElementById('st-search').value||'').toLowerCase();
   const list=items.filter(function(i){return i.name.toLowerCase().includes(q)});
   document.getElementById('st-list').innerHTML=list.length?list.map(function(i){return '<div class="row"><span>'+i.name+' ('+(i.size||'')+')</span><span class="stockbadge '+((i.stock||0)<=stockLimits.min?'low':'')+'">'+i.stock+' in stock</span></div>'}).join(''):'<div class="muted">Stock empty</div>';
 }
@@ -1104,7 +1109,6 @@ function renderStock(){
 document.addEventListener('DOMContentLoaded', function(){
   checkSubscription();
   const saveBtn = document.getElementById('b-savebtn');
-  file:
   if(saveBtn){
     saveBtn.addEventListener('click', function(e){
       e.preventDefault();
