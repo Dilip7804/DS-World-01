@@ -419,25 +419,44 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
+let isSyncing = false;
+let lastAutoSyncedBillNo = "";
+
 function cloudExportSilently(lastBill) {
-  if(!lastBill) return;
-  var itemsStr = (lastBill.items || []).map(function(i) {
-    return i.name + (i.size ? " ["+i.size+"]" : "") + " (" + i.qty + " x " + i.price + ")";
-  }).join("; ");
+  if(!lastBill || isSyncing) return;
+  if(lastAutoSyncedBillNo === lastBill.bNo) return;
+  
+  isSyncing = true;
+  lastAutoSyncedBillNo = lastBill.bNo;
 
-  var url = webAppUrl + "?action=export&billNo=" + encodeURIComponent(lastBill.bNo || "1") +
-            "&customerName=" + encodeURIComponent(lastBill.customer || "Customer") +
-            "&totalAmount=" + encodeURIComponent(lastBill.total || 0) +
-            "&date=" + encodeURIComponent(lastBill.date || new Date().toLocaleString()) +
-            "&itemsStr=" + encodeURIComponent(itemsStr);
-
-  fetch(url).catch(err => console.log("Sync error:", err));
+  var data = {
+    action: "export",
+    billNo: lastBill.bNo || "1",
+    customerName: lastBill.customer || "Customer",
+    items: lastBill.items || [],
+    totalAmount: lastBill.total || 0,
+    date: lastBill.date || new Date().toLocaleString()
+  };
+  
+  fetch(webAppUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(data)
+  }).then(() => {
+    setTimeout(function() { isSyncing = false; }, 3000);
+  }).catch(err => {
+    isSyncing = false;
+    console.log("Sync error:", err);
+  });
 }
 
+// Google Sheet se bill delete karne ke liye reliable GET request with Image/Script beacon
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  var url = webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo);
-  fetch(url).catch(err => console.log("Delete sync error:", err));
+  // Background GET fetch request
+  fetch(webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo))
+    .catch(err => console.log("Delete sync error:", err));
 }
 
 function cloudImport() {
@@ -640,6 +659,7 @@ function saveSettings(){
   showAlert('Settings save ho gayi');
 }
 
+// Mobile Crash-Proof Blob Download for Backup (.json)
 function exportData(){
   const data={items,bills,settings,logins,stockLimits,theme};
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -703,6 +723,7 @@ function importExcelFile(e){
   reader.readAsArrayBuffer(file);
 }
 
+// Mobile Crash-Proof Blob Download for CSV Reports
 function exportExcel(type){
   let csvContent='';
   let filename='report.csv';
@@ -955,15 +976,12 @@ function generateBill(){
 
   adjustStock(cart,-1);save('items',items);
   
-  // Robust Invoice Numbering logic (hamesha agla sahi number dega)
+  // Professional Invoice Numbering: Agar aakhri bill delete hua hai toh wahi number reuse hoga, warna naya aage badhega
   let nextSeq = 1;
   if(bills.length > 0) {
-    let numbers = bills.map(b => {
-      let n = parseInt(String(b.bNo).replace(/\D/g, ''));
-      return isNaN(n) ? 0 : n;
-    });
-    let maxNum = Math.max(...numbers);
-    nextSeq = maxNum + 1;
+    let lastBNo = bills[bills.length - 1].bNo; // e.g. "INV-0005"
+    let num = parseInt(lastBNo.replace(/\D/g, '')) || bills.length;
+    nextSeq = num + 1;
   }
   const bNo = 'INV-' + String(nextSeq).padStart(4, '0');
 
