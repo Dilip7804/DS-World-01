@@ -394,8 +394,8 @@ h3{margin:0 0 14px;font-size:16px;font-weight:700}
 </nav>
 
 <script>
-// Yahan apna naya wala Google Apps Script Web App URL daal dena
-var webAppUrl = "https://script.google.com/macros/s/AKfycbwvcwY5XJ7SjqsLaqbRLeNl4CGVx91Xle6FoPSwADZKh8PJUMZ0CvHkoCcDPJTa1mSfyA/exec";
+// Apna Google Apps Script Web App URL yahan daalein
+var webAppUrl = "https://script.google.com/macros/s/AKfycbyobstnpktl3nCaFnHtvfQECGLdUm7viwzrzWZ1lozxY0A8nrsqccM88dH9HtN8eZHmGQ/exec";
 
 let subData = load('subscription', { expiry: new Date(Date.now() + 365*24*60*60*1000).toISOString() });
 function checkSubscription() {
@@ -420,38 +420,7 @@ setInterval(function(){
   if(el) el.textContent = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN');
 }, 1000);
 
-// Hidden Form + Iframe submission to completely bypass CORS and Google redirects
-function sendViaForm(dataObj) {
-  let iframe = document.getElementById('sync-iframe');
-  if(!iframe) {
-    iframe = document.createElement('iframe');
-    iframe.name = 'sync-iframe';
-    iframe.id = 'sync-iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-  }
-  
-  let form = document.getElementById('sync-form');
-  if(!form) {
-    form = document.createElement('form');
-    form.id = 'sync-form';
-    form.method = 'POST';
-    form.action = webAppUrl;
-    form.target = 'sync-iframe';
-    document.body.appendChild(form);
-  } else {
-    form.innerHTML = '';
-  }
-  
-  let input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'payload';
-  input.value = JSON.stringify(dataObj);
-  form.appendChild(input);
-  
-  form.submit();
-}
-
+// GET request sync method (jaise Import kaam karta hai, waise hi Export/Delete bhi karega)
 function cloudExportSilently(lastBill) {
   if(!lastBill) return;
   var itemsStr = (lastBill.items || []).map(function(i) {
