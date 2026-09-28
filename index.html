@@ -458,22 +458,19 @@ function cloudExportSilently(lastBill) {
     return i.name + (i.size ? " ["+i.size+"]" : "") + " (" + i.qty + " x " + i.price + ")";
   }).join("; ");
 
-  sendViaForm({
-    action: "export",
-    billNo: lastBill.bNo || "1",
-    customerName: lastBill.customer || "Customer",
-    totalAmount: lastBill.total || 0,
-    date: lastBill.date || new Date().toLocaleString(),
-    itemsStr: itemsStr
-  });
+  var url = webAppUrl + "?action=export&billNo=" + encodeURIComponent(lastBill.bNo || "1") +
+            "&customerName=" + encodeURIComponent(lastBill.customer || "Customer") +
+            "&totalAmount=" + encodeURIComponent(lastBill.total || 0) +
+            "&date=" + encodeURIComponent(lastBill.date || new Date().toLocaleString()) +
+            "&itemsStr=" + encodeURIComponent(itemsStr);
+
+  fetch(url).catch(err => console.log("Export error:", err));
 }
 
 function cloudDeleteBillSilently(bNo) {
   if(!bNo) return;
-  sendViaForm({
-    action: "delete",
-    billNo: bNo
-  });
+  var url = webAppUrl + "?action=delete&billNo=" + encodeURIComponent(bNo);
+  fetch(url).catch(err => console.log("Delete error:", err));
 }
 
 function cloudImport() {
